@@ -11,9 +11,9 @@ import type {
   OpenRouterResponseFormat,
   StructuredChatInput,
   StructuredResult,
-} from '@/types';
+} from "@/types";
 
-type OpenRouterServiceOptions = {
+interface OpenRouterServiceOptions {
   apiKey: string;
   baseUrl?: string;
   defaultModel: string;
@@ -23,9 +23,9 @@ type OpenRouterServiceOptions = {
   appName?: string;
   appUrl?: string;
   maxRetries?: number;
-};
+}
 
-const DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
+const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_TIMEOUT_MS = 20000;
 const DEFAULT_MAX_RETRIES = 2;
 const RETRY_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
@@ -38,7 +38,7 @@ export class OpenRouterServiceError extends Error implements OpenRouterError {
 
   public constructor(options: OpenRouterError) {
     super(options.message);
-    this.name = 'OpenRouterServiceError';
+    this.name = "OpenRouterServiceError";
     this.code = options.code;
     this.status = options.status;
     this.details = options.details;
@@ -61,15 +61,15 @@ export class OpenRouterService {
   public constructor(options: OpenRouterServiceOptions) {
     if (!options.apiKey?.trim()) {
       throw new OpenRouterServiceError({
-        code: 'MISSING_API_KEY',
-        message: 'OPENROUTER_API_KEY is required.',
+        code: "MISSING_API_KEY",
+        message: "OPENROUTER_API_KEY is required.",
       });
     }
 
     if (!options.defaultModel?.trim()) {
       throw new OpenRouterServiceError({
-        code: 'MISSING_DEFAULT_MODEL',
-        message: 'Default model is required.',
+        code: "MISSING_DEFAULT_MODEL",
+        message: "Default model is required.",
       });
     }
 
@@ -91,31 +91,31 @@ export class OpenRouterService {
   public async createChatCompletion(input: ChatInput): Promise<ChatResult> {
     if (!input.user?.trim()) {
       throw new OpenRouterServiceError({
-        code: 'INVALID_INPUT',
-        message: 'User message is required.',
+        code: "INVALID_INPUT",
+        message: "User message is required.",
       });
     }
 
     const body = this.buildRequestBody(input);
-    const raw = await this.request<OpenRouterResponse>('/chat/completions', body);
+    const raw = await this.request<OpenRouterResponse>("/chat/completions", body);
     return this.parseResponse(raw);
   }
 
   public async createStructuredCompletion<TData = unknown>(
     input: StructuredChatInput,
-    schema: JsonSchema,
+    schema: JsonSchema
   ): Promise<StructuredResult<TData>> {
     if (!input.user?.trim()) {
       throw new OpenRouterServiceError({
-        code: 'INVALID_INPUT',
-        message: 'User message is required.',
+        code: "INVALID_INPUT",
+        message: "User message is required.",
       });
     }
 
     const responseFormat: OpenRouterResponseFormat = {
-      type: 'json_schema',
+      type: "json_schema",
       json_schema: {
-        name: 'StructuredResponse',
+        name: "StructuredResponse",
         strict: true,
         schema,
       },
@@ -126,13 +126,13 @@ export class OpenRouterService {
       response_format: responseFormat,
     });
 
-    const raw = await this.request<OpenRouterResponse>('/chat/completions', body);
+    const raw = await this.request<OpenRouterResponse>("/chat/completions", body);
     return this.parseStructuredResponse<TData>(raw, schema);
   }
 
   public async healthCheck(): Promise<HealthStatus> {
     try {
-      const response = await this.request<unknown>('/models', undefined, 'GET');
+      const response = await this.request<unknown>("/models", undefined, "GET");
       const requestId = this.extractRequestId(response);
       return { ok: true, requestId };
     } catch (error) {
@@ -149,15 +149,15 @@ export class OpenRouterService {
   private buildHeaders(): HeadersInit {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     if (this.appUrl) {
-      headers['HTTP-Referer'] = this.appUrl;
+      headers["HTTP-Referer"] = this.appUrl;
     }
 
     if (this.appName) {
-      headers['X-Title'] = this.appName;
+      headers["X-Title"] = this.appName;
     }
 
     return headers;
@@ -167,14 +167,14 @@ export class OpenRouterService {
     const messages: Message[] = [];
 
     if (system?.trim()) {
-      messages.push({ role: 'system', content: system.trim() });
+      messages.push({ role: "system", content: system.trim() });
     }
 
     if (history?.length) {
       messages.push(...history);
     }
 
-    messages.push({ role: 'user', content: user.trim() });
+    messages.push({ role: "user", content: user.trim() });
 
     return messages;
   }
@@ -183,8 +183,8 @@ export class OpenRouterService {
     const model = input.model?.trim() ?? this.defaultModel;
     if (!model) {
       throw new OpenRouterServiceError({
-        code: 'MISSING_MODEL',
-        message: 'Model is required for OpenRouter request.',
+        code: "MISSING_MODEL",
+        message: "Model is required for OpenRouter request.",
       });
     }
 
@@ -199,11 +199,7 @@ export class OpenRouterService {
     };
   }
 
-  private async request<T>(
-    path: string,
-    body?: unknown,
-    method: 'POST' | 'GET' = 'POST',
-  ): Promise<T> {
+  private async request<T>(path: string, body?: unknown, method: "POST" | "GET" = "POST"): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     let lastError: OpenRouterServiceError | undefined;
 
@@ -215,7 +211,7 @@ export class OpenRouterService {
         const response = await this.fetchImpl(url, {
           method,
           headers: this.buildHeaders(),
-          body: method === 'POST' && body !== undefined ? JSON.stringify(body) : undefined,
+          body: method === "POST" && body !== undefined ? JSON.stringify(body) : undefined,
           signal: controller.signal,
         });
 
@@ -249,8 +245,8 @@ export class OpenRouterService {
     throw (
       lastError ??
       new OpenRouterServiceError({
-        code: 'REQUEST_FAILED',
-        message: 'OpenRouter request failed after retries.',
+        code: "REQUEST_FAILED",
+        message: "OpenRouter request failed after retries.",
         retryable: false,
       })
     );
@@ -259,16 +255,16 @@ export class OpenRouterService {
   private parseResponse(raw: OpenRouterResponse): ChatResult {
     if (!raw.choices?.length) {
       throw new OpenRouterServiceError({
-        code: 'EMPTY_RESPONSE',
-        message: 'OpenRouter response contained no choices.',
+        code: "EMPTY_RESPONSE",
+        message: "OpenRouter response contained no choices.",
       });
     }
 
     const first = raw.choices[0];
     if (!first?.message?.content) {
       throw new OpenRouterServiceError({
-        code: 'EMPTY_MESSAGE',
-        message: 'OpenRouter response contained no message content.',
+        code: "EMPTY_MESSAGE",
+        message: "OpenRouter response contained no message content.",
       });
     }
 
@@ -289,8 +285,8 @@ export class OpenRouterService {
       data = JSON.parse(parsed.content) as TData;
     } catch (error) {
       throw new OpenRouterServiceError({
-        code: 'INVALID_JSON',
-        message: 'OpenRouter response is not valid JSON.',
+        code: "INVALID_JSON",
+        message: "OpenRouter response is not valid JSON.",
         details: [String(error)],
       });
     }
@@ -298,8 +294,8 @@ export class OpenRouterService {
     const errors = this.validateJsonAgainstSchema(data, schema);
     if (errors.length > 0) {
       throw new OpenRouterServiceError({
-        code: 'SCHEMA_VALIDATION_FAILED',
-        message: 'OpenRouter response does not match JSON schema.',
+        code: "SCHEMA_VALIDATION_FAILED",
+        message: "OpenRouter response does not match JSON schema.",
         details: errors,
       });
     }
@@ -318,25 +314,25 @@ export class OpenRouterService {
       return error;
     }
 
-    if (error instanceof Error && error.name === 'AbortError') {
+    if (error instanceof Error && error.name === "AbortError") {
       return new OpenRouterServiceError({
-        code: 'TIMEOUT',
-        message: 'OpenRouter request timed out.',
+        code: "TIMEOUT",
+        message: "OpenRouter request timed out.",
         retryable: true,
       });
     }
 
     if (error instanceof Error) {
       return new OpenRouterServiceError({
-        code: 'REQUEST_ERROR',
+        code: "REQUEST_ERROR",
         message: error.message,
         retryable: false,
       });
     }
 
     return new OpenRouterServiceError({
-      code: 'UNKNOWN_ERROR',
-      message: 'Unknown OpenRouter error.',
+      code: "UNKNOWN_ERROR",
+      message: "Unknown OpenRouter error.",
       retryable: false,
     });
   }
@@ -344,7 +340,7 @@ export class OpenRouterService {
   private async buildHttpError(response: Response): Promise<OpenRouterServiceError> {
     const status = response.status;
     const requestId =
-      response.headers.get('x-request-id') ?? response.headers.get('x-openrouter-request-id') ?? undefined;
+      response.headers.get("x-request-id") ?? response.headers.get("x-openrouter-request-id") ?? undefined;
 
     let payload: unknown = null;
     try {
@@ -357,7 +353,7 @@ export class OpenRouterService {
     const message = this.extractErrorMessage(payload) ?? `OpenRouter request failed with status ${status}.`;
 
     return new OpenRouterServiceError({
-      code: 'HTTP_ERROR',
+      code: "HTTP_ERROR",
       message,
       status,
       retryable,
@@ -374,15 +370,15 @@ export class OpenRouterService {
   }
 
   private extractErrorMessage(payload: unknown): string | undefined {
-    if (!payload || typeof payload !== 'object') {
+    if (!payload || typeof payload !== "object") {
       return undefined;
     }
 
-    if ('error' in payload && typeof (payload as { error?: unknown }).error === 'string') {
+    if ("error" in payload && typeof (payload as { error?: unknown }).error === "string") {
       return (payload as { error: string }).error;
     }
 
-    if ('message' in payload && typeof (payload as { message?: unknown }).message === 'string') {
+    if ("message" in payload && typeof (payload as { message?: unknown }).message === "string") {
       return (payload as { message: string }).message;
     }
 
@@ -391,9 +387,9 @@ export class OpenRouterService {
 
   private attachRequestId(data: unknown, response: Response): unknown {
     const requestId =
-      response.headers.get('x-request-id') ?? response.headers.get('x-openrouter-request-id') ?? undefined;
+      response.headers.get("x-request-id") ?? response.headers.get("x-openrouter-request-id") ?? undefined;
 
-    if (!requestId || !data || typeof data !== 'object') {
+    if (!requestId || !data || typeof data !== "object") {
       return data;
     }
 
@@ -401,11 +397,11 @@ export class OpenRouterService {
   }
 
   private extractRequestId(payload: unknown): string | undefined {
-    if (!payload || typeof payload !== 'object') {
+    if (!payload || typeof payload !== "object") {
       return undefined;
     }
 
-    if ('request_id' in payload && typeof (payload as { request_id?: unknown }).request_id === 'string') {
+    if ("request_id" in payload && typeof (payload as { request_id?: unknown }).request_id === "string") {
       return (payload as { request_id: string }).request_id;
     }
 
@@ -413,17 +409,12 @@ export class OpenRouterService {
   }
 
   private stripUndefined<TValue extends Record<string, unknown>>(value: TValue): TValue {
-    const output = { ...value };
-    for (const [key, val] of Object.entries(output)) {
-      if (val === undefined) {
-        delete output[key];
-      }
-    }
-    return output;
+    const entries = Object.entries(value).filter(([, val]) => val !== undefined);
+    return Object.fromEntries(entries) as TValue;
   }
 
   private normalizeBaseUrl(baseUrl: string): string {
-    const normalized = baseUrl.trim().replace(/\/+$/, '');
+    const normalized = baseUrl.trim().replace(/\/+$/, "");
     return normalized.length ? normalized : DEFAULT_BASE_URL;
   }
 
@@ -436,7 +427,7 @@ export class OpenRouterService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private validateJsonAgainstSchema(value: unknown, schema: JsonSchema, path = '$'): string[] {
+  private validateJsonAgainstSchema(value: unknown, schema: JsonSchema, path = "$"): string[] {
     if (schema.anyOf?.length) {
       const results = schema.anyOf.map((child) => this.validateJsonAgainstSchema(value, child, path));
       if (results.some((errors) => errors.length === 0)) {
@@ -459,7 +450,7 @@ export class OpenRouterService {
     }
 
     if (schema.enum && !schema.enum.includes(value as never)) {
-      return [`${path} should be one of ${schema.enum.join(', ')}.`];
+      return [`${path} should be one of ${schema.enum.join(", ")}.`];
     }
 
     if (!schema.type) {
@@ -467,15 +458,15 @@ export class OpenRouterService {
     }
 
     switch (schema.type) {
-      case 'string':
-        return typeof value === 'string' ? [] : [`${path} should be a string.`];
-      case 'number':
-        return typeof value === 'number' ? [] : [`${path} should be a number.`];
-      case 'boolean':
-        return typeof value === 'boolean' ? [] : [`${path} should be a boolean.`];
-      case 'null':
+      case "string":
+        return typeof value === "string" ? [] : [`${path} should be a string.`];
+      case "number":
+        return typeof value === "number" ? [] : [`${path} should be a number.`];
+      case "boolean":
+        return typeof value === "boolean" ? [] : [`${path} should be a boolean.`];
+      case "null":
         return value === null ? [] : [`${path} should be null.`];
-      case 'array':
+      case "array":
         if (!Array.isArray(value)) {
           return [`${path} should be an array.`];
         }
@@ -483,10 +474,10 @@ export class OpenRouterService {
           return [];
         }
         return value.flatMap((item, index) =>
-          this.validateJsonAgainstSchema(item, schema.items as JsonSchema, `${path}[${index}]`),
+          this.validateJsonAgainstSchema(item, schema.items as JsonSchema, `${path}[${index}]`)
         );
-      case 'object':
-        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      case "object": {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
           return [`${path} should be an object.`];
         }
 
@@ -502,11 +493,7 @@ export class OpenRouterService {
           for (const [key, propSchema] of Object.entries(schema.properties)) {
             if (key in (value as Record<string, unknown>)) {
               errors.push(
-                ...this.validateJsonAgainstSchema(
-                  (value as Record<string, unknown>)[key],
-                  propSchema,
-                  `${path}.${key}`,
-                ),
+                ...this.validateJsonAgainstSchema((value as Record<string, unknown>)[key], propSchema, `${path}.${key}`)
               );
             }
           }
@@ -522,7 +509,7 @@ export class OpenRouterService {
 
         if (
           schema.additionalProperties &&
-          typeof schema.additionalProperties === 'object' &&
+          typeof schema.additionalProperties === "object" &&
           !Array.isArray(schema.additionalProperties)
         ) {
           for (const key of Object.keys(value as Record<string, unknown>)) {
@@ -531,21 +518,22 @@ export class OpenRouterService {
                 ...this.validateJsonAgainstSchema(
                   (value as Record<string, unknown>)[key],
                   schema.additionalProperties as JsonSchema,
-                  `${path}.${key}`,
-                ),
+                  `${path}.${key}`
+                )
               );
             }
           }
         }
 
         return errors;
+      }
       default:
         return [];
     }
   }
 
   private logError(error: OpenRouterServiceError): void {
-    console.error('OpenRouter error', {
+    console.error("OpenRouter error", {
       code: error.code,
       status: error.status,
       retryable: error.retryable,

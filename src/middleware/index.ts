@@ -1,8 +1,8 @@
-import { defineMiddleware } from 'astro:middleware';
+import { defineMiddleware } from "astro:middleware";
 
-import { createSupabaseServerInstance } from '../db/supabase.client';
+import { createSupabaseServerInstance } from "../db/supabase.client";
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/register', '/reset-password']);
+const PUBLIC_PATHS = new Set(["/", "/login", "/register", "/reset-password"]);
 
 export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
   const supabase = createSupabaseServerInstance({
@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
 
   locals.supabase = supabase;
 
-  if (PUBLIC_PATHS.has(url.pathname) || url.pathname.startsWith('/api/auth/')) {
+  if (PUBLIC_PATHS.has(url.pathname) || url.pathname.startsWith("/api/auth/")) {
     return next();
   }
 
@@ -21,13 +21,13 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
   } = await supabase.auth.getUser();
 
   if (user) {
-    locals.user = { id: user.id, email: user.email ?? '' };
+    locals.user = { id: user.id, email: user.email ?? "" };
     return next();
   }
 
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.startsWith("/api/")) {
     return next();
   }
 
-  return redirect('/login');
+  return redirect("/login");
 });

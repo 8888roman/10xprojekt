@@ -1,24 +1,19 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
-import { unauthorizedResponse } from './api-responses';
+import { unauthorizedResponse } from "./api-responses";
 
 const getBearerToken = (context: Parameters<APIRoute>[0]) => {
-  const authHeader = context.request.headers.get('Authorization');
+  const authHeader = context.request.headers.get("Authorization");
 
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice('Bearer '.length).trim();
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice("Bearer ".length).trim();
   }
 
   return null;
 };
 
-const setAuthToken = async (
-  supabase: Parameters<APIRoute>[0]['locals']['supabase'],
-  token: string,
-) => {
-  const setAuth = (
-    supabase.auth as { setAuth?: (token: string) => Promise<void> | void }
-  ).setAuth;
+const setAuthToken = async (supabase: Parameters<APIRoute>[0]["locals"]["supabase"], token: string) => {
+  const setAuth = (supabase.auth as { setAuth?: (token: string) => Promise<void> | void }).setAuth;
 
   if (setAuth) {
     await setAuth(token);
@@ -39,7 +34,7 @@ export const requireApiUser = async (context: Parameters<APIRoute>[0]) => {
   const bearerToken = getBearerToken(context);
 
   if (!bearerToken) {
-    return { ok: false as const, response: unauthorizedResponse('Missing access token.') };
+    return { ok: false as const, response: unauthorizedResponse("Missing access token.") };
   }
 
   await setAuthToken(supabase, bearerToken);
@@ -48,7 +43,7 @@ export const requireApiUser = async (context: Parameters<APIRoute>[0]) => {
   } = await supabase.auth.getUser();
 
   if (!tokenUser) {
-    return { ok: false as const, response: unauthorizedResponse('Invalid or expired token.') };
+    return { ok: false as const, response: unauthorizedResponse("Invalid or expired token.") };
   }
 
   return { ok: true as const, userId: tokenUser.id };

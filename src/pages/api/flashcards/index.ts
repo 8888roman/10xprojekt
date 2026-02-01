@@ -1,20 +1,16 @@
-import type { APIRoute } from 'astro';
-import type { CreateFlashcardCommand, FlashcardListResponseDto } from '../../../types';
-import {
-  internalErrorResponse,
-  jsonResponse,
-  validationErrorResponse,
-} from '../../../lib/api-responses';
-import { requireApiUser } from '../../../lib/api-auth';
-import { createFlashcardSchema, flashcardListQuerySchema } from '../../../lib/schemas/flashcards';
-import { createFlashcard, listFlashcards } from '../../../lib/services/flashcards';
+import type { APIRoute } from "astro";
+import type { CreateFlashcardCommand, FlashcardListResponseDto } from "../../../types";
+import { internalErrorResponse, jsonResponse, validationErrorResponse } from "../../../lib/api-responses";
+import { requireApiUser } from "../../../lib/api-auth";
+import { createFlashcardSchema, flashcardListQuerySchema } from "../../../lib/schemas/flashcards";
+import { createFlashcard, listFlashcards } from "../../../lib/services/flashcards";
 
 export const prerender = false;
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
-const DEFAULT_SORT = 'created_at';
-const DEFAULT_ORDER = 'desc';
+const DEFAULT_SORT = "created_at";
+const DEFAULT_ORDER = "desc";
 
 export const GET: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
@@ -29,7 +25,7 @@ export const GET: APIRoute = async (context) => {
   const parsedQuery = flashcardListQuerySchema.safeParse(query);
 
   if (!parsedQuery.success) {
-    return validationErrorResponse('Validation failed.', parsedQuery.error.issues);
+    return validationErrorResponse("Validation failed.", parsedQuery.error.issues);
   }
 
   const {
@@ -52,7 +48,7 @@ export const GET: APIRoute = async (context) => {
     });
 
     if (error) {
-      return internalErrorResponse('Failed to load flashcards.');
+      return internalErrorResponse("Failed to load flashcards.");
     }
 
     const responseBody: FlashcardListResponseDto = {
@@ -65,8 +61,8 @@ export const GET: APIRoute = async (context) => {
     };
 
     return jsonResponse(responseBody, 200);
-  } catch (error) {
-    return internalErrorResponse('Unexpected server error.');
+  } catch {
+    return internalErrorResponse("Unexpected server error.");
   }
 };
 
@@ -82,20 +78,18 @@ export const POST: APIRoute = async (context) => {
 
   try {
     body = await context.request.json();
-  } catch (error) {
-    return validationErrorResponse('Invalid JSON body.', [
-      { message: error instanceof Error ? error.message : 'Unable to parse JSON.' },
-    ]);
+  } catch {
+    return validationErrorResponse("Invalid JSON body.", [{ message: "Unable to parse JSON." }]);
   }
 
-  if (!body || typeof body !== 'object') {
-    return validationErrorResponse('Request body must be a JSON object.');
+  if (!body || typeof body !== "object") {
+    return validationErrorResponse("Request body must be a JSON object.");
   }
 
   const parsed = createFlashcardSchema.safeParse(body);
 
   if (!parsed.success) {
-    return validationErrorResponse('Validation failed.', parsed.error.issues);
+    return validationErrorResponse("Validation failed.", parsed.error.issues);
   }
 
   const payload: CreateFlashcardCommand = parsed.data;
@@ -104,15 +98,15 @@ export const POST: APIRoute = async (context) => {
     const { data, error } = await createFlashcard(supabase, payload, auth.userId);
 
     if (error) {
-      return internalErrorResponse('Failed to create flashcard.');
+      return internalErrorResponse("Failed to create flashcard.");
     }
 
     if (!data) {
-      return internalErrorResponse('Flashcard was not created.');
+      return internalErrorResponse("Flashcard was not created.");
     }
 
     return jsonResponse(data, 201);
-  } catch (error) {
-    return internalErrorResponse('Unexpected server error.');
+  } catch {
+    return internalErrorResponse("Unexpected server error.");
   }
 };

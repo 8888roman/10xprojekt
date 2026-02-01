@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
-import { internalErrorResponse } from '../../../lib/api-responses';
+import { internalErrorResponse } from "../../../lib/api-responses";
 
 export const prerender = false;
 
@@ -11,14 +11,14 @@ export const POST: APIRoute = async (context) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      return internalErrorResponse('Failed to log out.');
+      return internalErrorResponse("Failed to log out.");
     }
 
     return new Response(null, {
       status: 302,
-      headers: { Location: '/login' },
+      headers: { Location: "/login" },
     });
-  } catch (error) {
-    return internalErrorResponse('Unexpected server error.');
+  } catch {
+    return internalErrorResponse("Unexpected server error.");
   }
 };

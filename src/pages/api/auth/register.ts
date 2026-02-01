@@ -1,11 +1,7 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
-import {
-  internalErrorResponse,
-  jsonResponse,
-  validationErrorResponse,
-} from '../../../lib/api-responses';
-import { registerSchema } from '../../../lib/schemas/auth';
+import { internalErrorResponse, jsonResponse, validationErrorResponse } from "../../../lib/api-responses";
+import { registerSchema } from "../../../lib/schemas/auth";
 
 export const prerender = false;
 
@@ -15,20 +11,18 @@ export const POST: APIRoute = async (context) => {
 
   try {
     body = await context.request.json();
-  } catch (error) {
-    return validationErrorResponse('Invalid JSON body.', [
-      { message: error instanceof Error ? error.message : 'Unable to parse JSON.' },
-    ]);
+  } catch {
+    return validationErrorResponse("Invalid JSON body.", [{ message: "Unable to parse JSON." }]);
   }
 
-  if (!body || typeof body !== 'object') {
-    return validationErrorResponse('Request body must be a JSON object.');
+  if (!body || typeof body !== "object") {
+    return validationErrorResponse("Request body must be a JSON object.");
   }
 
   const parsed = registerSchema.safeParse(body);
 
   if (!parsed.success) {
-    return validationErrorResponse('Validation failed.', parsed.error.issues);
+    return validationErrorResponse("Validation failed.", parsed.error.issues);
   }
 
   const { email, password } = parsed.data;
@@ -40,18 +34,18 @@ export const POST: APIRoute = async (context) => {
     });
 
     if (error) {
-      return validationErrorResponse('Nie udalo sie utworzyc konta.');
+      return validationErrorResponse("Nie udalo sie utworzyc konta.");
     }
 
     const requiresVerification = !data.session;
 
     return jsonResponse(
       {
-        status: requiresVerification ? 'verification_required' : 'authenticated',
+        status: requiresVerification ? "verification_required" : "authenticated",
       },
-      requiresVerification ? 200 : 201,
+      requiresVerification ? 200 : 201
     );
-  } catch (error) {
-    return internalErrorResponse('Unexpected server error.');
+  } catch {
+    return internalErrorResponse("Unexpected server error.");
   }
 };

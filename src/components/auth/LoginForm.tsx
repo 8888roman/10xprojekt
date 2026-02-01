@@ -1,37 +1,43 @@
-import { useCallback, useId, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { AuthCard } from './AuthCard';
-import { AuthErrorBanner } from './AuthErrorBanner';
+import { useCallback, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AuthCard } from "./AuthCard";
+import { AuthErrorBanner } from "./AuthErrorBanner";
 
-type FormErrors = {
+interface FormErrors {
   email?: string;
   password?: string;
   form?: string;
-};
+}
 
 const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 
 export const LoginForm = () => {
   const emailId = useId();
   const passwordId = useId();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleEmailChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-    if (errors.email || errors.form) {
-      setErrors((current) => ({ ...current, email: undefined, form: undefined }));
-    }
-  }, [errors.email, errors.form]);
+  const handleEmailChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setEmail(event.target.value);
+      if (errors.email || errors.form) {
+        setErrors((current) => ({ ...current, email: undefined, form: undefined }));
+      }
+    },
+    [errors.email, errors.form]
+  );
 
-  const handlePasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(event.target.value);
-    if (errors.password || errors.form) {
-      setErrors((current) => ({ ...current, password: undefined, form: undefined }));
-    }
-  }, [errors.password, errors.form]);
+  const handlePasswordChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setPassword(event.target.value);
+      if (errors.password || errors.form) {
+        setErrors((current) => ({ ...current, password: undefined, form: undefined }));
+      }
+    },
+    [errors.password, errors.form]
+  );
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -41,17 +47,17 @@ export const LoginForm = () => {
       const trimmedEmail = email.trim();
 
       if (!trimmedEmail) {
-        nextErrors.email = 'Email jest wymagany.';
+        nextErrors.email = "Email jest wymagany.";
       } else if (!isValidEmail(trimmedEmail)) {
-        nextErrors.email = 'Podaj poprawny adres email.';
+        nextErrors.email = "Podaj poprawny adres email.";
       }
 
       if (!password) {
-        nextErrors.password = 'Haslo jest wymagane.';
+        nextErrors.password = "Haslo jest wymagane.";
       }
 
       if (Object.keys(nextErrors).length > 0) {
-        nextErrors.form = 'Sprawdz pola formularza.';
+        nextErrors.form = "Sprawdz pola formularza.";
         setErrors(nextErrors);
         return;
       }
@@ -60,25 +66,25 @@ export const LoginForm = () => {
       setIsSubmitting(true);
 
       try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: trimmedEmail, password }),
         });
 
         if (!response.ok) {
-          setErrors({ form: 'Nieprawidlowy email lub haslo.' });
+          setErrors({ form: "Nieprawidlowy email lub haslo." });
           return;
         }
 
-        window.location.href = '/generate';
+        window.location.href = "/generate";
       } catch {
-        setErrors({ form: 'Wystapil blad serwera. Sprobuj ponownie.' });
+        setErrors({ form: "Wystapil blad serwera. Sprobuj ponownie." });
       } finally {
         setIsSubmitting(false);
       }
     },
-    [email, password],
+    [email, password]
   );
 
   return (
@@ -88,7 +94,10 @@ export const LoginForm = () => {
       footer={
         <div className="flex flex-col gap-2 text-center">
           <span>
-            Nie masz konta? <a className="font-medium text-foreground underline" href="/register">Zarejestruj sie</a>
+            Nie masz konta?{" "}
+            <a className="font-medium text-foreground underline" href="/register">
+              Zarejestruj sie
+            </a>
           </span>
           <a className="underline" href="/recover">
             Nie pamietasz hasla?
@@ -139,7 +148,7 @@ export const LoginForm = () => {
           )}
         </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Logowanie...' : 'Zaloguj sie'}
+          {isSubmitting ? "Logowanie..." : "Zaloguj sie"}
         </Button>
       </form>
     </AuthCard>

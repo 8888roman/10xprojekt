@@ -1,6 +1,6 @@
-import type { ErrorResponseDto } from '../types';
+import type { ErrorResponseDto } from "../types";
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const JSON_HEADERS = { "Content-Type": "application/json" };
 
 export const jsonResponse = <T>(data: T, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -8,21 +8,15 @@ export const jsonResponse = <T>(data: T, status = 200) =>
     headers: JSON_HEADERS,
   });
 
-type ErrorResponseParams = {
+interface ErrorResponseParams {
   status: number;
   error: string;
   message: string;
-  code: ErrorResponseDto['code'];
-  details?: ErrorResponseDto['details'];
-};
+  code: ErrorResponseDto["code"];
+  details?: ErrorResponseDto["details"];
+}
 
-export const errorResponse = ({
-  status,
-  error,
-  message,
-  code,
-  details = [],
-}: ErrorResponseParams) =>
+export const errorResponse = ({ status, error, message, code, details = [] }: ErrorResponseParams) =>
   jsonResponse<ErrorResponseDto>(
     {
       error,
@@ -30,49 +24,46 @@ export const errorResponse = ({
       code,
       details,
     },
-    status,
+    status
   );
 
-export const validationErrorResponse = (
-  message: string,
-  details: ErrorResponseDto['details'] = [],
-) =>
+export const validationErrorResponse = (message: string, details: ErrorResponseDto["details"] = []) =>
   errorResponse({
     status: 400,
-    error: 'Bad Request',
+    error: "Bad Request",
     message,
-    code: 'VALIDATION_ERROR',
+    code: "VALIDATION_ERROR",
     details,
   });
 
-export const unauthorizedResponse = (message = 'Unauthorized') =>
+export const unauthorizedResponse = (message = "Unauthorized") =>
   errorResponse({
     status: 401,
-    error: 'Unauthorized',
+    error: "Unauthorized",
     message,
-    code: 'UNAUTHORIZED',
+    code: "UNAUTHORIZED",
   });
 
-export const rateLimitedResponse = (message = 'Too many requests') =>
+export const rateLimitedResponse = (message = "Too many requests") =>
   errorResponse({
     status: 429,
-    error: 'Too Many Requests',
+    error: "Too Many Requests",
     message,
-    code: 'RATE_LIMITED',
+    code: "RATE_LIMITED",
   });
 
-export const internalErrorResponse = (message = 'Internal server error') =>
+export const internalErrorResponse = (message = "Internal server error") =>
   errorResponse({
     status: 500,
-    error: 'Internal Server Error',
+    error: "Internal Server Error",
     message,
-    code: 'INTERNAL_ERROR',
+    code: "INTERNAL_ERROR",
   });
 
-export const notFoundResponse = (message = 'Not Found') =>
+export const notFoundResponse = (message = "Not Found") =>
   errorResponse({
     status: 404,
-    error: 'Not Found',
+    error: "Not Found",
     message,
-    code: 'NOT_FOUND',
+    code: "NOT_FOUND",
   });

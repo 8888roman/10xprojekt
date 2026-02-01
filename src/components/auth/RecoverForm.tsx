@@ -1,27 +1,30 @@
-import { useCallback, useId, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { AuthCard } from './AuthCard';
-import { AuthErrorBanner } from './AuthErrorBanner';
+import { useCallback, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AuthCard } from "./AuthCard";
+import { AuthErrorBanner } from "./AuthErrorBanner";
 
-type FormErrors = {
+interface FormErrors {
   email?: string;
   form?: string;
-};
+}
 
 const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 
 export const RecoverForm = () => {
   const emailId = useId();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [success, setSuccess] = useState(false);
 
-  const handleEmailChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-    if (errors.email) {
-      setErrors((current) => ({ ...current, email: undefined, form: undefined }));
-    }
-  }, [errors.email]);
+  const handleEmailChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setEmail(event.target.value);
+      if (errors.email) {
+        setErrors((current) => ({ ...current, email: undefined, form: undefined }));
+      }
+    },
+    [errors.email]
+  );
 
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
@@ -32,13 +35,13 @@ export const RecoverForm = () => {
       const trimmedEmail = email.trim();
 
       if (!trimmedEmail) {
-        nextErrors.email = 'Email jest wymagany.';
+        nextErrors.email = "Email jest wymagany.";
       } else if (!isValidEmail(trimmedEmail)) {
-        nextErrors.email = 'Podaj poprawny adres email.';
+        nextErrors.email = "Podaj poprawny adres email.";
       }
 
       if (Object.keys(nextErrors).length > 0) {
-        nextErrors.form = 'Sprawdz pole formularza.';
+        nextErrors.form = "Sprawdz pole formularza.";
         setErrors(nextErrors);
         return;
       }
@@ -46,7 +49,7 @@ export const RecoverForm = () => {
       setErrors({});
       setSuccess(true);
     },
-    [email],
+    [email]
   );
 
   return (
@@ -55,7 +58,10 @@ export const RecoverForm = () => {
       description="Podaj email, aby otrzymac link do ustawienia nowego hasla."
       footer={
         <div className="text-center">
-          Wroc do <a className="font-medium text-foreground underline" href="/login">logowania</a>
+          Wroc do{" "}
+          <a className="font-medium text-foreground underline" href="/login">
+            logowania
+          </a>
         </div>
       }
     >

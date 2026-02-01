@@ -1,14 +1,14 @@
-import { useCallback, useId, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { AuthCard } from './AuthCard';
-import { AuthErrorBanner } from './AuthErrorBanner';
+import { useCallback, useId, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AuthCard } from "./AuthCard";
+import { AuthErrorBanner } from "./AuthErrorBanner";
 
-type FormErrors = {
+interface FormErrors {
   email?: string;
   password?: string;
   confirm?: string;
   form?: string;
-};
+}
 
 const isValidEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 
@@ -16,33 +16,42 @@ export const RegisterForm = () => {
   const emailId = useId();
   const passwordId = useId();
   const confirmId = useId();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  const handleEmailChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-    if (errors.email || errors.form) {
-      setErrors((current) => ({ ...current, email: undefined, form: undefined }));
-    }
-  }, [errors.email, errors.form]);
+  const handleEmailChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setEmail(event.target.value);
+      if (errors.email || errors.form) {
+        setErrors((current) => ({ ...current, email: undefined, form: undefined }));
+      }
+    },
+    [errors.email, errors.form]
+  );
 
-  const handlePasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(event.target.value);
-    if (errors.password || errors.form) {
-      setErrors((current) => ({ ...current, password: undefined, form: undefined }));
-    }
-  }, [errors.password, errors.form]);
+  const handlePasswordChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setPassword(event.target.value);
+      if (errors.password || errors.form) {
+        setErrors((current) => ({ ...current, password: undefined, form: undefined }));
+      }
+    },
+    [errors.password, errors.form]
+  );
 
-  const handleConfirmChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirm(event.target.value);
-    if (errors.confirm || errors.form) {
-      setErrors((current) => ({ ...current, confirm: undefined, form: undefined }));
-    }
-  }, [errors.confirm, errors.form]);
+  const handleConfirmChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setConfirm(event.target.value);
+      if (errors.confirm || errors.form) {
+        setErrors((current) => ({ ...current, confirm: undefined, form: undefined }));
+      }
+    },
+    [errors.confirm, errors.form]
+  );
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -53,25 +62,25 @@ export const RegisterForm = () => {
       const trimmedEmail = email.trim();
 
       if (!trimmedEmail) {
-        nextErrors.email = 'Email jest wymagany.';
+        nextErrors.email = "Email jest wymagany.";
       } else if (!isValidEmail(trimmedEmail)) {
-        nextErrors.email = 'Podaj poprawny adres email.';
+        nextErrors.email = "Podaj poprawny adres email.";
       }
 
       if (!password) {
-        nextErrors.password = 'Haslo jest wymagane.';
+        nextErrors.password = "Haslo jest wymagane.";
       } else if (password.length < 8) {
-        nextErrors.password = 'Haslo musi miec co najmniej 8 znakow.';
+        nextErrors.password = "Haslo musi miec co najmniej 8 znakow.";
       }
 
       if (!confirm) {
-        nextErrors.confirm = 'Powtorz haslo.';
+        nextErrors.confirm = "Powtorz haslo.";
       } else if (password && confirm !== password) {
-        nextErrors.confirm = 'Hasla musza byc takie same.';
+        nextErrors.confirm = "Hasla musza byc takie same.";
       }
 
       if (Object.keys(nextErrors).length > 0) {
-        nextErrors.form = 'Sprawdz pola formularza.';
+        nextErrors.form = "Sprawdz pola formularza.";
         setErrors(nextErrors);
         return;
       }
@@ -80,32 +89,32 @@ export const RegisterForm = () => {
       setIsSubmitting(true);
 
       try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: trimmedEmail, password }),
         });
 
         if (!response.ok) {
-          setErrors({ form: 'Nie udalo sie utworzyc konta.' });
+          setErrors({ form: "Nie udalo sie utworzyc konta." });
           return;
         }
 
         const payload = (await response.json()) as { status?: string };
 
-        if (payload.status === 'verification_required') {
-          setInfoMessage('Sprawdz skrzynke i potwierdz adres email, aby aktywowac konto.');
+        if (payload.status === "verification_required") {
+          setInfoMessage("Sprawdz skrzynke i potwierdz adres email, aby aktywowac konto.");
           return;
         }
 
-        window.location.href = '/generate';
+        window.location.href = "/generate";
       } catch {
-        setErrors({ form: 'Wystapil blad serwera. Sprobuj ponownie.' });
+        setErrors({ form: "Wystapil blad serwera. Sprobuj ponownie." });
       } finally {
         setIsSubmitting(false);
       }
     },
-    [confirm, email, password],
+    [confirm, email, password]
   );
 
   return (
@@ -114,7 +123,10 @@ export const RegisterForm = () => {
       description="Utworz konto, aby zapisywac fiszki i historie generowania."
       footer={
         <div className="text-center">
-          Masz juz konto? <a className="font-medium text-foreground underline" href="/login">Zaloguj sie</a>
+          Masz juz konto?{" "}
+          <a className="font-medium text-foreground underline" href="/login">
+            Zaloguj sie
+          </a>
         </div>
       }
     >
@@ -186,7 +198,7 @@ export const RegisterForm = () => {
           )}
         </div>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? 'Tworzenie konta...' : 'Zarejestruj sie'}
+          {isSubmitting ? "Tworzenie konta..." : "Zarejestruj sie"}
         </Button>
       </form>
     </AuthCard>

@@ -1,7 +1,7 @@
 type AuthOverrides = Partial<{
   getUser: () => Promise<unknown>;
   setSession: () => Promise<unknown>;
-  setAuth: () => Promise<unknown> | void;
+  setAuth: () => Promise<unknown> | undefined;
 }>;
 
 export const createCookies = (values: Record<string, string>) => ({
@@ -10,12 +10,12 @@ export const createCookies = (values: Record<string, string>) => ({
 
 export const createRequestWithAuth = (url: string) =>
   new Request(url, {
-    headers: { Authorization: 'Bearer token' },
+    headers: { Authorization: "Bearer token" },
   });
 
 export const createAuthSupabaseMock = (overrides: AuthOverrides = {}) => ({
   auth: {
-    getUser: async () => ({ data: { user: { id: 'user-id' } }, error: null }),
+    getUser: async () => ({ data: { user: { id: "user-id" } }, error: null }),
     setSession: async () => ({ data: null, error: null }),
     setAuth: async () => undefined,
     ...overrides,

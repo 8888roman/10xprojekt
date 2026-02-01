@@ -1,43 +1,42 @@
-import type { APIRoute } from 'astro';
-import type { CreateGenerationErrorLogCommand, GenerateFlashcardsResponseDto } from '../../../types';
+import type { APIRoute } from "astro";
+import type { CreateGenerationErrorLogCommand, GenerateFlashcardsResponseDto } from "../../../types";
 import {
   errorResponse,
   internalErrorResponse,
   jsonResponse,
   rateLimitedResponse,
   validationErrorResponse,
-} from '../../../lib/api-responses';
-import { generateFlashcardsSchema } from '../../../lib/schemas/flashcards';
-import { checkRateLimit } from '../../../lib/rate-limit';
-import { generateFlashcardProposals, LlmServiceError } from '../../../lib/services/flashcard-generate';
+} from "../../../lib/api-responses";
+import { generateFlashcardsSchema } from "../../../lib/schemas/flashcards";
+import { checkRateLimit } from "../../../lib/rate-limit";
+import { generateFlashcardProposals, LlmServiceError } from "../../../lib/services/flashcard-generate";
 
 export const prerender = false;
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
-const DEFAULT_LLM_MODEL = import.meta.env.LLM_MODEL ?? 'mock';
+const DEFAULT_LLM_MODEL = import.meta.env.LLM_MODEL ?? "mock";
 
 const getAccessToken = (context: Parameters<APIRoute>[0]) => {
-  const authHeader = context.request.headers.get('Authorization');
+  const authHeader = context.request.headers.get("Authorization");
 
-  if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice('Bearer '.length).trim();
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.slice("Bearer ".length).trim();
   }
 
-  return context.cookies.get('sb-access-token')?.value ?? null;
+  return context.cookies.get("sb-access-token")?.value ?? null;
 };
 
-const getRefreshToken = (context: Parameters<APIRoute>[0]) =>
-  context.cookies.get('sb-refresh-token')?.value ?? null;
+const getRefreshToken = (context: Parameters<APIRoute>[0]) => context.cookies.get("sb-refresh-token")?.value ?? null;
 
 const toHex = (buffer: ArrayBuffer) =>
   Array.from(new Uint8Array(buffer))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 
 const sha256Hex = async (value: string) => {
   const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', data);
+  const digest = await crypto.subtle.digest("SHA-256", data);
   return toHex(digest);
 };
 
@@ -55,11 +54,11 @@ export const POST: APIRoute = async (context) => {
     }
   }
 
-  const requestKey = userId ?? context.clientAddress ?? 'anonymous';
+  const requestKey = userId ?? context.clientAddress ?? "anonymous";
   const rateLimit = checkRateLimit(requestKey, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
 
   if (!rateLimit.allowed) {
-    return rateLimitedResponse('Rate limit exceeded. Try again later.');
+    return rateLimitedResponse("Rate limit exceeded. Try again later.");
   }
 
   let body: unknown;
@@ -67,19 +66,19 @@ export const POST: APIRoute = async (context) => {
   try {
     body = await context.request.json();
   } catch (error) {
-    return validationErrorResponse('Invalid JSON body.', [
-      { message: error instanceof Error ? error.message : 'Unable to parse JSON.' },
+    return validationErrorResponse("Invalid JSON body.", [
+      { message: error instanceof Error ? error.message : "Unable to parse JSON." },
     ]);
   }
 
-  if (!body || typeof body !== 'object') {
-    return validationErrorResponse('Request body must be a JSON object.');
+  if (!body || typeof body !== "object") {
+    return validationErrorResponse("Request body must be a JSON object.");
   }
 
   const parsed = generateFlashcardsSchema.safeParse(body);
 
   if (!parsed.success) {
-    return validationErrorResponse('Validation failed.', parsed.error.issues);
+    return validationErrorResponse("Validation failed.", parsed.error.issues);
   }
 
   const { text } = parsed.data;
@@ -108,23 +107,23 @@ export const POST: APIRoute = async (context) => {
         }
 
         if (userId) {
-          await supabase.from('generation_error_logs').insert({
+          await supabase.from("generation_error_logs").insert({
             ...logPayload,
             user_id: userId,
           });
         }
       } catch (logError) {
-        console.warn('Failed to log LLM error', logError);
+        console.warn("Failed to log LLM error", logError);
       }
 
       return errorResponse({
         status: error.status,
-        error: error.status === 502 ? 'Bad Gateway' : 'Service Unavailable',
+        error: error.status === 502 ? "Bad Gateway" : "Service Unavailable",
         message: error.message,
-        code: 'INTERNAL_ERROR',
+        code: "INTERNAL_ERROR",
       });
     }
 
-    return internalErrorResponse('Unexpected server error.');
+    return internalErrorResponse("Unexpected server error.");
   }
 };

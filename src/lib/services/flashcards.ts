@@ -1,37 +1,34 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import type {
-  CreateFlashcardCommand,
-  FlashcardDto,
-  FlashcardListQueryDto,
-} from '../../types';
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { CreateFlashcardCommand, FlashcardDto, FlashcardListQueryDto } from "../../types";
 
-type DeleteFlashcardResult = {
+interface DeleteFlashcardResult {
   id: number;
-};
+}
 
 /**
  * Deletes a flashcard by id for the currently authenticated user (RLS enforced).
  */
 export const deleteFlashcard = async (supabase: SupabaseClient, id: number) =>
-  supabase.from('flashcards').delete().eq('id', id).select('id').single<DeleteFlashcardResult>();
+  supabase.from("flashcards").delete().eq("id", id).select("id").single<DeleteFlashcardResult>();
 
 /**
  * Fetches a single flashcard by id for the current user (RLS enforced).
  */
 export const getFlashcardById = async (supabase: SupabaseClient, id: number) =>
-  supabase.from('flashcards').select('*').eq('id', id).single<FlashcardDto>();
+  supabase.from("flashcards").select("*").eq("id", id).single<FlashcardDto>();
 
 /**
  * Creates a flashcard for the current user (RLS enforced).
  */
-export const createFlashcard = async (
-  supabase: SupabaseClient,
-  payload: CreateFlashcardCommand,
-  userId: string,
-) => supabase.from('flashcards').insert({ ...payload, user_id: userId }).select('*').single<FlashcardDto>();
+export const createFlashcard = async (supabase: SupabaseClient, payload: CreateFlashcardCommand, userId: string) =>
+  supabase
+    .from("flashcards")
+    .insert({ ...payload, user_id: userId })
+    .select("*")
+    .single<FlashcardDto>();
 
-type ListFlashcardsParams = Required<Pick<FlashcardListQueryDto, 'page' | 'limit' | 'sort' | 'order'>> &
-  Pick<FlashcardListQueryDto, 'source' | 'generation_id'>;
+type ListFlashcardsParams = Required<Pick<FlashcardListQueryDto, "page" | "limit" | "sort" | "order">> &
+  Pick<FlashcardListQueryDto, "source" | "generation_id">;
 
 /**
  * Lists flashcards for the current user with pagination and optional filters.
@@ -41,17 +38,17 @@ export const listFlashcards = async (supabase: SupabaseClient, params: ListFlash
   const from = (page - 1) * limit;
   const to = page * limit - 1;
 
-  let query = supabase.from('flashcards').select('*', { count: 'exact' });
+  let query = supabase.from("flashcards").select("*", { count: "exact" });
 
   if (source) {
-    query = query.eq('source', source);
+    query = query.eq("source", source);
   }
 
   if (generation_id) {
-    query = query.eq('generation_id', generation_id);
+    query = query.eq("generation_id", generation_id);
   }
 
-  query = query.order(sort, { ascending: order === 'asc' }).range(from, to);
+  query = query.order(sort, { ascending: order === "asc" }).range(from, to);
 
   return query;
 };

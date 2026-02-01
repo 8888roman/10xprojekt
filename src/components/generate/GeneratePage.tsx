@@ -1,65 +1,63 @@
-import { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { generateFlashcardsSchema } from '@/lib/schemas/flashcards';
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { generateFlashcardsSchema } from "@/lib/schemas/flashcards";
 import type {
   CreateFlashcardCommand,
   CreateGenerationCommand,
   GenerateFlashcardsCommand,
   GenerateFlashcardsResponseDto,
-} from '@/types';
+} from "@/types";
 
-type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'edited';
-type DecisionFilter = 'all' | ProposalStatus;
+type ProposalStatus = "pending" | "accepted" | "rejected" | "edited";
+type DecisionFilter = "all" | ProposalStatus;
 
-type FlashcardProposalViewModel = {
+interface FlashcardProposalViewModel {
   id: string;
   front: string;
   back: string;
   status: ProposalStatus;
-};
+}
 
-type ProposalEditPayload = {
+interface ProposalEditPayload {
   front: string;
   back: string;
-};
+}
 
-type FormErrorViewModel = {
+interface FormErrorViewModel {
   message: string;
   code?: string;
-  field?: 'text';
-};
+  field?: "text";
+}
 
 const sha256Hex = async (value: string) => {
   const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', data);
+  const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 };
 
 const createLocalId = (index: number) =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
-    ? crypto.randomUUID()
-    : `proposal-${Date.now()}-${index}`;
+  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `proposal-${Date.now()}-${index}`;
 
 const mapStatusLabel: Record<ProposalStatus, string> = {
-  pending: 'Do decyzji',
-  accepted: 'Zaakceptowana',
-  rejected: 'Odrzucona',
-  edited: 'Edytowana',
+  pending: "Do decyzji",
+  accepted: "Zaakceptowana",
+  rejected: "Odrzucona",
+  edited: "Edytowana",
 };
 
 const mapStatusClass: Record<ProposalStatus, string> = {
-  pending: 'bg-secondary text-secondary-foreground',
-  accepted: 'bg-green-100 text-green-900',
-  rejected: 'bg-red-100 text-red-900',
-  edited: 'bg-amber-100 text-amber-900',
+  pending: "bg-secondary text-secondary-foreground",
+  accepted: "bg-green-100 text-green-900",
+  rejected: "bg-red-100 text-red-900",
+  edited: "bg-amber-100 text-amber-900",
 };
 
 export const GeneratePage = () => {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [proposals, setProposals] = useState<FlashcardProposalViewModel[]>([]);
-  const [filter, setFilter] = useState<DecisionFilter>('all');
+  const [filter, setFilter] = useState<DecisionFilter>("all");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<FormErrorViewModel | null>(null);
@@ -72,14 +70,12 @@ export const GeneratePage = () => {
   const lengthValid = length >= 1000 && length <= 10000;
 
   const selectedCount = useMemo(
-    () =>
-      proposals.filter((proposal) => proposal.status === 'accepted' || proposal.status === 'edited')
-        .length,
-    [proposals],
+    () => proposals.filter((proposal) => proposal.status === "accepted" || proposal.status === "edited").length,
+    [proposals]
   );
 
   const filteredProposals = useMemo(() => {
-    if (filter === 'all') {
+    if (filter === "all") {
       return proposals;
     }
     return proposals.filter((proposal) => proposal.status === filter);
@@ -87,7 +83,7 @@ export const GeneratePage = () => {
 
   const handleChange = (value: string) => {
     setText(value);
-    if (error?.field === 'text') {
+    if (error?.field === "text") {
       setError(null);
     }
   };
@@ -97,8 +93,8 @@ export const GeneratePage = () => {
     setSaveError(null);
     const parsed = generateFlashcardsSchema.safeParse({ text });
     if (!parsed.success) {
-      const message = parsed.error.errors[0]?.message ?? 'Nieprawidłowy tekst.';
-      setError({ message, field: 'text', code: 'VALIDATION_ERROR' });
+      const message = parsed.error.errors[0]?.message ?? "Nieprawidłowy tekst.";
+      setError({ message, field: "text", code: "VALIDATION_ERROR" });
       return;
     }
 
@@ -107,20 +103,20 @@ export const GeneratePage = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/flashcards/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/flashcards/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
 
       if (!response.ok) {
-        let message = 'Nie udało się wygenerować fiszek.';
-        let code = 'INTERNAL_ERROR';
+        let message = "Nie udało się wygenerować fiszek.";
+        let code = "INTERNAL_ERROR";
         try {
           const errorPayload = (await response.json()) as { message?: string; code?: string };
           if (errorPayload?.message) {
@@ -140,26 +136,22 @@ export const GeneratePage = () => {
       const nextProposals = data.proposals.map((proposal, index) => ({
         ...proposal,
         id: createLocalId(index),
-        status: 'pending' as const,
+        status: "pending" as const,
       }));
       setProposals(nextProposals);
     } catch {
-      setError({ message: 'Brak połączenia z serwerem. Spróbuj ponownie.' });
+      setError({ message: "Brak połączenia z serwerem. Spróbuj ponownie." });
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleAccept = (id: string) => {
-    setProposals((items) =>
-      items.map((item) => (item.id === id ? { ...item, status: 'accepted' } : item)),
-    );
+    setProposals((items) => items.map((item) => (item.id === id ? { ...item, status: "accepted" } : item)));
   };
 
   const handleReject = (id: string) => {
-    setProposals((items) =>
-      items.map((item) => (item.id === id ? { ...item, status: 'rejected' } : item)),
-    );
+    setProposals((items) => items.map((item) => (item.id === id ? { ...item, status: "rejected" } : item)));
   };
 
   const handleEdit = (payload: ProposalEditPayload) => {
@@ -169,10 +161,8 @@ export const GeneratePage = () => {
 
     setProposals((items) =>
       items.map((item) =>
-        item.id === editing.id
-          ? { ...item, front: payload.front, back: payload.back, status: 'edited' }
-          : item,
-      ),
+        item.id === editing.id ? { ...item, front: payload.front, back: payload.back, status: "edited" } : item
+      )
     );
     setEditing(null);
   };
@@ -185,15 +175,13 @@ export const GeneratePage = () => {
     setSuccess(false);
     setSaveError(null);
 
-    const accepted = proposals.filter(
-      (proposal) => proposal.status === 'accepted' || proposal.status === 'edited',
-    );
-    const editedCount = accepted.filter((proposal) => proposal.status === 'edited').length;
+    const accepted = proposals.filter((proposal) => proposal.status === "accepted" || proposal.status === "edited");
+    const editedCount = accepted.filter((proposal) => proposal.status === "edited").length;
     const uneditedCount = accepted.length - editedCount;
 
     try {
       const generationPayload: CreateGenerationCommand = {
-        model: 'ui',
+        model: "ui",
         generated_count: proposals.length,
         accepted_unedited_count: uneditedCount,
         accepted_edited_count: editedCount,
@@ -202,19 +190,19 @@ export const GeneratePage = () => {
         generation_duration: 0,
       };
 
-      const generationResponse = await fetch('/api/generations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const generationResponse = await fetch("/api/generations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(generationPayload),
       });
 
       if (generationResponse.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
 
       if (!generationResponse.ok) {
-        setSaveError('Nie udało się zapisać sesji generowania.');
+        setSaveError("Nie udało się zapisać sesji generowania.");
         return;
       }
 
@@ -224,30 +212,30 @@ export const GeneratePage = () => {
         const payload: CreateFlashcardCommand = {
           front: proposal.front,
           back: proposal.back,
-          source: proposal.status === 'edited' ? 'ai-edited' : 'ai-full',
+          source: proposal.status === "edited" ? "ai-edited" : "ai-full",
           generation_id: generation.id,
         };
 
-        const flashcardResponse = await fetch('/api/flashcards', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const flashcardResponse = await fetch("/api/flashcards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
         if (flashcardResponse.status === 401) {
-          window.location.href = '/login';
+          window.location.href = "/login";
           return;
         }
 
         if (!flashcardResponse.ok) {
-          setSaveError('Nie udało się zapisać wszystkich fiszek.');
+          setSaveError("Nie udało się zapisać wszystkich fiszek.");
           return;
         }
       }
 
       setSuccess(true);
     } catch {
-      setSaveError('Brak połączenia z serwerem. Spróbuj ponownie.');
+      setSaveError("Brak połączenia z serwerem. Spróbuj ponownie.");
     } finally {
       setIsSaving(false);
     }
@@ -277,14 +265,14 @@ export const GeneratePage = () => {
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground" id="text-help">
             <span>Licznik znaków: {length}</span>
-            <span>{lengthValid ? 'Zakres poprawny' : 'Wymagane 1000–10000 znaków'}</span>
+            <span>{lengthValid ? "Zakres poprawny" : "Wymagane 1000–10000 znaków"}</span>
           </div>
           {error && <ErrorBanner message={error.message} />}
           <div className="flex items-center gap-2">
             <Button onClick={handleGenerate} disabled={!lengthValid || isGenerating}>
-              {isGenerating ? 'Generowanie...' : 'Generuj'}
+              {isGenerating ? "Generowanie..." : "Generuj"}
             </Button>
-            {error?.code === 'RATE_LIMITED' && (
+            {error?.code === "RATE_LIMITED" && (
               <Button variant="outline" size="sm" onClick={handleGenerate}>
                 Spróbuj ponownie
               </Button>
@@ -298,14 +286,14 @@ export const GeneratePage = () => {
 
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {(['all', 'pending', 'accepted', 'rejected', 'edited'] as const).map((value) => (
+          {(["all", "pending", "accepted", "rejected", "edited"] as const).map((value) => (
             <Button
               key={value}
-              variant={filter === value ? 'default' : 'outline'}
+              variant={filter === value ? "default" : "outline"}
               size="sm"
               onClick={() => setFilter(value)}
             >
-              {value === 'all' ? 'Wszystkie' : mapStatusLabel[value]}
+              {value === "all" ? "Wszystkie" : mapStatusLabel[value]}
             </Button>
           ))}
         </div>
@@ -340,13 +328,7 @@ export const GeneratePage = () => {
         onSave={handleSaveAccepted}
       />
 
-      {editing && (
-        <ProposalEditSheet
-          proposal={editing}
-          onClose={() => setEditing(null)}
-          onSave={handleEdit}
-        />
-      )}
+      {editing && <ProposalEditSheet proposal={editing} onClose={() => setEditing(null)} onSave={handleEdit} />}
     </main>
   );
 };
@@ -471,14 +453,12 @@ const SaveAcceptedBar = ({
 }) => (
   <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
     <div className="text-sm">
-      {acceptedCount > 0
-        ? `Gotowe do zapisu: ${acceptedCount}`
-        : 'Zaakceptuj propozycje, aby je zapisać.'}
+      {acceptedCount > 0 ? `Gotowe do zapisu: ${acceptedCount}` : "Zaakceptuj propozycje, aby je zapisać."}
     </div>
     <div className="flex items-center gap-3">
       {success && (
         <span className="text-sm text-green-700">
-          Zapisano.{' '}
+          Zapisano.{" "}
           <a className="underline" href="/flashcards">
             Przejdź do Moich fiszek
           </a>
@@ -486,7 +466,7 @@ const SaveAcceptedBar = ({
       )}
       {error && <span className="text-sm text-destructive">{error}</span>}
       <Button onClick={onSave} disabled={acceptedCount === 0 || isSaving}>
-        {isSaving ? 'Zapisywanie...' : 'Zapisz zaakceptowane'}
+        {isSaving ? "Zapisywanie..." : "Zapisz zaakceptowane"}
       </Button>
     </div>
   </section>

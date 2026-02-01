@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   useFlashcards,
   type FlashcardListItemViewModel,
   type FlashcardsSortOption,
   type FormErrorViewModel,
-} from '@/components/hooks/useFlashcards';
-import type { CreateFlashcardCommand, FlashcardSource, UpdateFlashcardCommand } from '@/types';
+} from "@/components/hooks/useFlashcards";
+import type { CreateFlashcardCommand, FlashcardSource, UpdateFlashcardCommand } from "@/types";
 
 const sourceLabels: Record<FlashcardSource, string> = {
-  'ai-full': 'AI (pełne)',
-  'ai-edited': 'AI (edytowane)',
-  manual: 'Manualne',
+  "ai-full": "AI (pełne)",
+  "ai-edited": "AI (edytowane)",
+  manual: "Manualne",
 };
 
 const sortOptions: { label: string; value: FlashcardsSortOption }[] = [
-  { label: 'Utworzone: od najnowszych', value: { field: 'created_at', order: 'desc' } },
-  { label: 'Utworzone: od najstarszych', value: { field: 'created_at', order: 'asc' } },
-  { label: 'Zaktualizowane: od najnowszych', value: { field: 'updated_at', order: 'desc' } },
-  { label: 'Zaktualizowane: od najstarszych', value: { field: 'updated_at', order: 'asc' } },
+  { label: "Utworzone: od najnowszych", value: { field: "created_at", order: "desc" } },
+  { label: "Utworzone: od najstarszych", value: { field: "created_at", order: "asc" } },
+  { label: "Zaktualizowane: od najnowszych", value: { field: "updated_at", order: "desc" } },
+  { label: "Zaktualizowane: od najstarszych", value: { field: "updated_at", order: "asc" } },
 ];
 
 export const FlashcardsPage = () => {
@@ -34,10 +34,9 @@ export const FlashcardsPage = () => {
   const selectedSort = useMemo(
     () =>
       sortOptions.find(
-        (option) =>
-          option.value.field === state.query.sort && option.value.order === state.query.order,
+        (option) => option.value.field === state.query.sort && option.value.order === state.query.order
       ) ?? sortOptions[0],
-    [state.query.order, state.query.sort],
+    [state.query.order, state.query.sort]
   );
 
   const handleCreate = useCallback(
@@ -50,7 +49,7 @@ export const FlashcardsPage = () => {
       }
       return result.ok;
     },
-    [createFlashcard],
+    [createFlashcard]
   );
 
   const handleEdit = useCallback(
@@ -62,7 +61,7 @@ export const FlashcardsPage = () => {
         setEditTarget(null);
       }
     },
-    [updateFlashcard],
+    [updateFlashcard]
   );
 
   const handleDelete = useCallback(async () => {
@@ -81,9 +80,7 @@ export const FlashcardsPage = () => {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">Moje fiszki</h1>
-        <p className="text-sm text-muted-foreground">
-          Zarządzaj zapisanymi fiszkami, filtruj źródła i sortuj listę.
-        </p>
+        <p className="text-sm text-muted-foreground">Zarządzaj zapisanymi fiszkami, filtruj źródła i sortuj listę.</p>
       </header>
 
       <FlashcardsToolbar
@@ -107,11 +104,7 @@ export const FlashcardsPage = () => {
         />
       )}
 
-      <Pagination
-        page={state.meta.page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
+      <Pagination page={state.meta.page} totalPages={totalPages} onPageChange={setPage} />
 
       {isCreateOpen && (
         <FlashcardCreateSheet
@@ -180,9 +173,9 @@ const FlashcardsToolbar = ({
           <select
             id={sourceId}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={source ?? 'all'}
+            value={source ?? "all"}
             onChange={(event) =>
-              onSourceChange(event.target.value === 'all' ? undefined : (event.target.value as FlashcardSource))
+              onSourceChange(event.target.value === "all" ? undefined : (event.target.value as FlashcardSource))
             }
           >
             <option value="all">Wszystkie</option>
@@ -200,9 +193,9 @@ const FlashcardsToolbar = ({
             className="h-9 min-w-[220px] rounded-md border border-input bg-background px-3 text-sm"
             value={`${sort.field}-${sort.order}`}
             onChange={(event) => {
-              const [field, order] = event.target.value.split('-') as [
-                FlashcardsSortOption['field'],
-                FlashcardsSortOption['order'],
+              const [field, order] = event.target.value.split("-") as [
+                FlashcardsSortOption["field"],
+                FlashcardsSortOption["order"],
               ];
               onSortChange({ field, order });
             }}
@@ -245,12 +238,7 @@ const FlashcardsList = ({
   return (
     <section className="space-y-3">
       {items.map((item) => (
-        <FlashcardCard
-          key={item.id}
-          item={item}
-          onEdit={() => onEdit(item)}
-          onDelete={() => onDelete(item)}
-        />
+        <FlashcardCard key={item.id} item={item} onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} />
       ))}
     </section>
   );
@@ -282,10 +270,10 @@ const FlashcardCard = ({
     </div>
     <div className="mt-4 flex flex-wrap gap-2">
       <Button size="sm" onClick={onEdit} disabled={item.isUpdating}>
-        {item.isUpdating ? 'Zapisywanie...' : 'Edytuj'}
+        {item.isUpdating ? "Zapisywanie..." : "Edytuj"}
       </Button>
       <Button size="sm" variant="destructive" onClick={onDelete} disabled={item.isDeleting}>
-        {item.isDeleting ? 'Usuwanie...' : 'Usuń'}
+        {item.isDeleting ? "Usuwanie..." : "Usuń"}
       </Button>
     </div>
   </article>
@@ -310,12 +298,7 @@ const Pagination = ({
         Strona {page} z {totalPages}
       </span>
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-        >
+        <Button variant="outline" size="sm" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
           Poprzednia
         </Button>
         <Button
@@ -331,13 +314,7 @@ const Pagination = ({
   );
 };
 
-const ErrorBanner = ({
-  error,
-  onRetry,
-}: {
-  error: FormErrorViewModel;
-  onRetry?: () => void;
-}) => (
+const ErrorBanner = ({ error, onRetry }: { error: FormErrorViewModel; onRetry?: () => void }) => (
   <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <span>{error.message}</span>
@@ -371,13 +348,13 @@ const FlashcardCreateSheet = ({
   isSaving: boolean;
   error?: FormErrorViewModel;
 }) => {
-  const [front, setFront] = useState('');
-  const [back, setBack] = useState('');
+  const [front, setFront] = useState("");
+  const [back, setBack] = useState("");
 
   useEffect(() => {
     if (open) {
-      setFront('');
-      setBack('');
+      setFront("");
+      setBack("");
     }
   }, [open]);
 
@@ -389,12 +366,12 @@ const FlashcardCreateSheet = ({
       return;
     }
     const ok = await onSave(
-      { front: front.trim(), back: back.trim(), source: 'manual', generation_id: null },
-      keepOpen,
+      { front: front.trim(), back: back.trim(), source: "manual", generation_id: null },
+      keepOpen
     );
     if (ok && keepOpen) {
-      setFront('');
-      setBack('');
+      setFront("");
+      setBack("");
     }
   };
 
@@ -443,7 +420,7 @@ const FlashcardCreateSheet = ({
             Zapisz i dodaj kolejną
           </Button>
           <Button onClick={() => handleSave(false)} disabled={!frontValid || !backValid || isSaving}>
-            {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+            {isSaving ? "Zapisywanie..." : "Zapisz"}
           </Button>
         </div>
       </div>
@@ -524,7 +501,7 @@ const FlashcardEditSheet = ({
             onClick={() => onSave({ front: front.trim(), back: back.trim() })}
             disabled={!frontValid || !backValid || isSaving}
           >
-            {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+            {isSaving ? "Zapisywanie..." : "Zapisz"}
           </Button>
         </div>
       </div>
@@ -556,15 +533,13 @@ const DeleteConfirmDialog = ({
     >
       <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
         <h2 className="text-lg font-semibold">Potwierdź usunięcie</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Usunięcie fiszki jest trwałe i nie można go cofnąć.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Usunięcie fiszki jest trwałe i nie można go cofnąć.</p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Anuluj
           </Button>
           <Button variant="destructive" onClick={onConfirm} disabled={isDeleting}>
-            {isDeleting ? 'Usuwanie...' : 'Usuń'}
+            {isDeleting ? "Usuwanie..." : "Usuń"}
           </Button>
         </div>
       </div>

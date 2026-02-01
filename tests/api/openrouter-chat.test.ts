@@ -1,19 +1,33 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-import { createCookies } from '../utils/supabase-mocks';
+import { createCookies } from "../utils/supabase-mocks";
 
-vi.mock('../../src/lib/services/openrouter', () => {
-  let chatResult: any = {
-    content: 'ok',
-    model: 'openai/gpt-4.1-mini',
-    requestId: 'req_1',
-    finishReason: 'stop',
+vi.mock("../../src/lib/services/openrouter", () => {
+  interface ChatResult {
+    content: string;
+    model: string;
+    requestId?: string;
+    finishReason?: string;
+  }
+
+  interface StructuredResult {
+    data: { ok: boolean };
+    model: string;
+    requestId?: string;
+    finishReason?: string;
+  }
+
+  let chatResult: ChatResult = {
+    content: "ok",
+    model: "openai/gpt-4.1-mini",
+    requestId: "req_1",
+    finishReason: "stop",
   };
-  let structuredResult: any = {
+  let structuredResult: StructuredResult = {
     data: { ok: true },
-    model: 'openai/gpt-4.1-mini',
-    requestId: 'req_2',
-    finishReason: 'stop',
+    model: "openai/gpt-4.1-mini",
+    requestId: "req_2",
+    finishReason: "stop",
   };
   let nextError: Error | null = null;
 
@@ -24,7 +38,7 @@ vi.mock('../../src/lib/services/openrouter', () => {
 
     public constructor(message: string, status?: number, retryable?: boolean, details?: unknown[]) {
       super(message);
-      this.name = 'OpenRouterServiceError';
+      this.name = "OpenRouterServiceError";
       this.status = status;
       this.retryable = retryable;
       this.details = details;
@@ -48,15 +62,15 @@ vi.mock('../../src/lib/services/openrouter', () => {
   }
 
   const __setMockOpenRouter = (options: {
-    chatResult?: unknown;
-    structuredResult?: unknown;
+    chatResult?: Partial<ChatResult>;
+    structuredResult?: Partial<StructuredResult>;
     error?: Error | null;
   }) => {
     if (options.chatResult !== undefined) {
-      chatResult = options.chatResult;
+      chatResult = { ...chatResult, ...options.chatResult };
     }
     if (options.structuredResult !== undefined) {
-      structuredResult = options.structuredResult;
+      structuredResult = { ...structuredResult, ...options.structuredResult };
     }
     if (options.error !== undefined) {
       nextError = options.error;
@@ -66,64 +80,64 @@ vi.mock('../../src/lib/services/openrouter', () => {
   return { OpenRouterService, OpenRouterServiceError, __setMockOpenRouter };
 });
 
-import { POST } from '../../src/pages/api/openrouter/chat';
-import { __setMockOpenRouter, OpenRouterServiceError } from '../../src/lib/services/openrouter';
+import { POST } from "../../src/pages/api/openrouter/chat";
+import { __setMockOpenRouter, OpenRouterServiceError } from "../../src/lib/services/openrouter";
 
 type PostContext = Parameters<typeof POST>[0];
 
 const createContext = (body: unknown): PostContext =>
   ({
-    request: new Request('http://localhost/api/openrouter/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    request: new Request("http://localhost/api/openrouter/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     }),
     cookies: createCookies({}),
     params: {},
-    locals: {} as PostContext['locals'],
-    clientAddress: '127.0.0.1',
+    locals: {} as PostContext["locals"],
+    clientAddress: "127.0.0.1",
   }) as PostContext;
 
-describe('POST /api/openrouter/chat', () => {
-  it('returns chat completion', async () => {
+describe("POST /api/openrouter/chat", () => {
+  it("returns chat completion", async () => {
     __setMockOpenRouter({
       chatResult: {
-        content: 'Hello',
-        model: 'openai/gpt-4.1-mini',
-        requestId: 'req_123',
-        finishReason: 'stop',
+        content: "Hello",
+        model: "openai/gpt-4.1-mini",
+        requestId: "req_123",
+        finishReason: "stop",
       },
       error: null,
     });
 
-    const response = await POST(createContext({ user: 'Hi' }));
+    const response = await POST(createContext({ user: "Hi" }));
     const body = (await response.json()) as { content: string; model: string; requestId?: string };
 
     expect(response.status).toBe(200);
-    expect(body.content).toBe('Hello');
-    expect(body.requestId).toBe('req_123');
+    expect(body.content).toBe("Hello");
+    expect(body.requestId).toBe("req_123");
   });
 
-  it('returns structured completion', async () => {
+  it("returns structured completion", async () => {
     __setMockOpenRouter({
       structuredResult: {
         data: { ok: true },
-        model: 'openai/gpt-4.1-mini',
-        requestId: 'req_456',
-        finishReason: 'stop',
+        model: "openai/gpt-4.1-mini",
+        requestId: "req_456",
+        finishReason: "stop",
       },
       error: null,
     });
 
     const response = await POST(
       createContext({
-        user: 'Hi',
+        user: "Hi",
         schema: {
-          type: 'object',
-          properties: { ok: { type: 'boolean' } },
-          required: ['ok'],
+          type: "object",
+          properties: { ok: { type: "boolean" } },
+          required: ["ok"],
         },
-      }),
+      })
     );
     const body = (await response.json()) as { data: { ok: boolean } };
 
@@ -131,21 +145,21 @@ describe('POST /api/openrouter/chat', () => {
     expect(body.data.ok).toBe(true);
   });
 
-  it('returns validation error for invalid payload', async () => {
+  it("returns validation error for invalid payload", async () => {
     const response = await POST(createContext({}));
 
     expect(response.status).toBe(400);
   });
 
-  it('maps OpenRouterServiceError to 503', async () => {
+  it("maps OpenRouterServiceError to 503", async () => {
     __setMockOpenRouter({
-      error: new OpenRouterServiceError('Service unavailable', 503, true, [{ code: 'E' }]),
+      error: new OpenRouterServiceError("Service unavailable", 503, true, [{ code: "E" }]),
     });
 
-    const response = await POST(createContext({ user: 'Hi' }));
+    const response = await POST(createContext({ user: "Hi" }));
     const body = (await response.json()) as { message: string };
 
     expect(response.status).toBe(503);
-    expect(body.message).toBe('Service unavailable');
+    expect(body.message).toBe("Service unavailable");
   });
 });

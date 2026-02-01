@@ -1,7 +1,7 @@
-type RateLimitState = {
+interface RateLimitState {
   count: number;
   resetAt: number;
-};
+}
 
 const rateLimitStore = new Map<string, RateLimitState>();
 
@@ -20,17 +20,13 @@ const sweepExpiredEntries = (current: number) => {
   }
 };
 
-export type RateLimitResult = {
+export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   resetAt: number;
-};
+}
 
-export const checkRateLimit = (
-  key: string,
-  limit: number,
-  windowMs: number,
-): RateLimitResult => {
+export const checkRateLimit = (key: string, limit: number, windowMs: number): RateLimitResult => {
   const current = now();
   sweepExpiredEntries(current);
   const existing = rateLimitStore.get(key);

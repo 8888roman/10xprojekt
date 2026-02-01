@@ -1,13 +1,13 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { RegisterForm } from '../components/auth/RegisterForm';
+import Layout from "../layouts/Layout.astro";
+import { RegisterForm } from "../components/auth/RegisterForm";
 
 const {
   data: { user },
 } = await Astro.locals.supabase.auth.getUser();
 
 if (user) {
-  return Astro.redirect('/generate');
+  return Astro.redirect("/generate");
 }
 ---
 

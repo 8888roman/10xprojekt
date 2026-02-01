@@ -1,11 +1,7 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 
-import {
-  internalErrorResponse,
-  unauthorizedResponse,
-  validationErrorResponse,
-} from '../../../lib/api-responses';
-import { loginSchema } from '../../../lib/schemas/auth';
+import { internalErrorResponse, unauthorizedResponse, validationErrorResponse } from "../../../lib/api-responses";
+import { loginSchema } from "../../../lib/schemas/auth";
 
 export const prerender = false;
 
@@ -15,20 +11,18 @@ export const POST: APIRoute = async (context) => {
 
   try {
     body = await context.request.json();
-  } catch (error) {
-    return validationErrorResponse('Invalid JSON body.', [
-      { message: error instanceof Error ? error.message : 'Unable to parse JSON.' },
-    ]);
+  } catch {
+    return validationErrorResponse("Invalid JSON body.", [{ message: "Unable to parse JSON." }]);
   }
 
-  if (!body || typeof body !== 'object') {
-    return validationErrorResponse('Request body must be a JSON object.');
+  if (!body || typeof body !== "object") {
+    return validationErrorResponse("Request body must be a JSON object.");
   }
 
   const parsed = loginSchema.safeParse(body);
 
   if (!parsed.success) {
-    return validationErrorResponse('Validation failed.', parsed.error.issues);
+    return validationErrorResponse("Validation failed.", parsed.error.issues);
   }
 
   const { email, password } = parsed.data;
@@ -37,11 +31,11 @@ export const POST: APIRoute = async (context) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      return unauthorizedResponse('Nieprawidlowy email lub haslo.');
+      return unauthorizedResponse("Nieprawidlowy email lub haslo.");
     }
 
     return new Response(null, { status: 200 });
-  } catch (error) {
-    return internalErrorResponse('Unexpected server error.');
+  } catch {
+    return internalErrorResponse("Unexpected server error.");
   }
 };

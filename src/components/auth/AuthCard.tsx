@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-type AuthCardProps = {
+interface AuthCardProps {
   title: string;
   description?: string;
   children: ReactNode;
   footer?: ReactNode;
-};
+}
 
 export const AuthCard = ({ title, description, children, footer }: AuthCardProps) => (
   <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-10">
