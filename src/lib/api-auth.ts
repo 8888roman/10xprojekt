@@ -2,57 +2,54 @@ import type { APIRoute } from 'astro';
 
 import { unauthorizedResponse } from './api-responses';
 
-const getAccessToken = (context: Parameters<APIRoute>[0]) => {
+const getBearerToken = (context: Parameters<APIRoute>[0]) => {
   const authHeader = context.request.headers.get('Authorization');
 
   if (authHeader?.startsWith('Bearer ')) {
     return authHeader.slice('Bearer '.length).trim();
   }
 
-  return context.cookies.get('sb-access-token')?.value ?? null;
+  return null;
 };
 
-const getRefreshToken = (context: Parameters<APIRoute>[0]) =>
-  context.cookies.get('sb-refresh-token')?.value ?? null;
-
-const setSupabaseSession = async (
+const setAuthToken = async (
   supabase: Parameters<APIRoute>[0]['locals']['supabase'],
-  accessToken: string,
-  refreshToken: string | null,
+  token: string,
 ) => {
-  if (refreshToken) {
-    await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    return;
-  }
-
   const setAuth = (
     supabase.auth as { setAuth?: (token: string) => Promise<void> | void }
   ).setAuth;
 
   if (setAuth) {
-    await setAuth(accessToken);
+    await setAuth(token);
   }
 };
 
 export const requireApiUser = async (context: Parameters<APIRoute>[0]) => {
   const supabase = context.locals.supabase;
-  const accessToken = getAccessToken(context);
-  const refreshToken = getRefreshToken(context);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  if (!accessToken) {
+  if (user && !error) {
+    return { ok: true as const, userId: user.id };
+  }
+
+  const bearerToken = getBearerToken(context);
+
+  if (!bearerToken) {
     return { ok: false as const, response: unauthorizedResponse('Missing access token.') };
   }
 
-  const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+  await setAuthToken(supabase, bearerToken);
+  const {
+    data: { user: tokenUser },
+  } = await supabase.auth.getUser();
 
-  if (userError || !userData.user) {
+  if (!tokenUser) {
     return { ok: false as const, response: unauthorizedResponse('Invalid or expired token.') };
   }
 
-  await setSupabaseSession(supabase, accessToken, refreshToken);
-
-  return { ok: true as const, userId: userData.user.id };
+  return { ok: true as const, userId: tokenUser.id };
 };
