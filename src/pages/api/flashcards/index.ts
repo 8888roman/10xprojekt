@@ -5,7 +5,7 @@ import {
   jsonResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
-import { ensureAuthenticated } from '../../../lib/auth';
+import { requireApiUser } from '../../../lib/api-auth';
 import { createFlashcardSchema, flashcardListQuerySchema } from '../../../lib/schemas/flashcards';
 import { createFlashcard, listFlashcards } from '../../../lib/services/flashcards';
 
@@ -18,7 +18,7 @@ const DEFAULT_ORDER = 'desc';
 
 export const GET: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const auth = await ensureAuthenticated(context, supabase);
+  const auth = await requireApiUser(context);
 
   if (!auth.ok) {
     return auth.response;
@@ -72,7 +72,7 @@ export const GET: APIRoute = async (context) => {
 
 export const POST: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const auth = await ensureAuthenticated(context, supabase);
+  const auth = await requireApiUser(context);
 
   if (!auth.ok) {
     return auth.response;

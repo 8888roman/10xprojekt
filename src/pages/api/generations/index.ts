@@ -6,7 +6,7 @@ import {
   jsonResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
-import { ensureAuthenticated } from '../../../lib/auth';
+import { requireApiUser } from '../../../lib/api-auth';
 import { createGenerationSchema } from '../../../lib/schemas/generations';
 import { createGeneration } from '../../../lib/services/generations';
 
@@ -14,7 +14,7 @@ export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const auth = await ensureAuthenticated(context, supabase);
+  const auth = await requireApiUser(context);
 
   if (!auth.ok) {
     return auth.response;

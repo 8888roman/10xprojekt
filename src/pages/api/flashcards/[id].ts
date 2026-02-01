@@ -6,7 +6,7 @@ import {
   notFoundResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
-import { ensureAuthenticated } from '../../../lib/auth';
+import { requireApiUser } from '../../../lib/api-auth';
 import { getFlashcardById, deleteFlashcard } from '../../../lib/services/flashcards';
 import { flashcardIdParamSchema } from '../../../lib/schemas/flashcards';
 
@@ -14,7 +14,7 @@ export const prerender = false;
 
 export const GET: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const auth = await ensureAuthenticated(context, supabase);
+  const auth = await requireApiUser(context);
 
   if (!auth.ok) {
     return auth.response;
@@ -51,7 +51,7 @@ export const GET: APIRoute = async (context) => {
 
 export const DELETE: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const auth = await ensureAuthenticated(context, supabase);
+  const auth = await requireApiUser(context);
 
   if (!auth.ok) {
     return auth.response;
