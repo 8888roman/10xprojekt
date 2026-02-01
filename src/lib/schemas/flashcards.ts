@@ -23,3 +23,24 @@ export const flashcardIdParamSchema = z.object({
 });
 
 export type FlashcardIdParamInput = z.infer<typeof flashcardIdParamSchema>;
+
+export const flashcardListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1, { message: 'Page must be at least 1.' }).optional(),
+  limit: z
+    .coerce
+    .number()
+    .int()
+    .min(1, { message: 'Limit must be at least 1.' })
+    .optional(),
+  source: z.enum(['ai-full', 'ai-edited', 'manual']).optional(),
+  generation_id: z
+    .coerce
+    .number()
+    .int()
+    .positive({ message: 'Generation id must be greater than zero.' })
+    .optional(),
+  sort: z.enum(['created_at', 'updated_at']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
+});
+
+export type FlashcardListQueryInput = z.infer<typeof flashcardListQuerySchema>;
