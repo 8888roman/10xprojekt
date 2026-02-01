@@ -23,5 +23,18 @@ if (!user) {
         To jest widok konta. Dalsze ustawienia zostana dodane w kolejnych krokach.
       </p>
     </section>
+    <section class="rounded-lg border bg-card p-4 shadow-sm">
+      <form method="post" action="/api/auth/logout" class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-sm text-muted-foreground">
+          Wyloguj sie z aplikacji.
+        </div>
+        <button
+          type="submit"
+          class="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow-sm hover:bg-destructive/90"
+        >
+          Wyloguj
+        </button>
+      </form>
+    </section>
   </main>
 </Layout>
