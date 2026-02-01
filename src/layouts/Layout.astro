@@ -18,6 +18,17 @@ const { title = "10x Astro Starter" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    <header class="border-b bg-background">
+      <nav class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
+        <a class="text-lg font-semibold" href="/generate">10x-cards</a>
+        <div class="flex flex-wrap items-center gap-3 text-sm">
+          <a class="rounded-md px-3 py-2 hover:bg-accent" href="/generate">Generowanie</a>
+          <a class="rounded-md px-3 py-2 hover:bg-accent" href="/flashcards">Moje fiszki</a>
+          <a class="rounded-md px-3 py-2 hover:bg-accent" href="/study">Sesja nauki</a>
+          <a class="rounded-md px-3 py-2 hover:bg-accent" href="/account">Konto</a>
+        </div>
+      </nav>
+    </header>
     <slot />
   </body>
 </html>

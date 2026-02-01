@@ -5,7 +5,6 @@ import {
   jsonResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
-import { ensureAuthenticated } from '../../../lib/auth';
 import { flashcardListQuerySchema } from '../../../lib/schemas/flashcards';
 import { listFlashcards } from '../../../lib/services/flashcards';
 
@@ -18,11 +17,6 @@ const DEFAULT_ORDER = 'desc';
 
 export const GET: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
-  const authResult = await ensureAuthenticated(context, supabase);
-
-  if (!authResult.ok) {
-    return authResult.response;
-  }
 
   const url = new URL(context.request.url);
   const query = Object.fromEntries(url.searchParams.entries());
