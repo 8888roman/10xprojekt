@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import type { APIRoute } from 'astro';
 import type { CreateGenerationErrorLogCommand, GenerateFlashcardsResponseDto } from '../../../types';
 import {
@@ -11,7 +10,6 @@ import {
 import { generateFlashcardsSchema } from '../../../lib/schemas/flashcards';
 import { checkRateLimit } from '../../../lib/rate-limit';
 import { generateFlashcardProposals, LlmServiceError } from '../../../lib/services/flashcard-generate';
-import type { Database } from '../../../db/database.types';
 
 export const prerender = false;
 
@@ -93,46 +91,24 @@ export const POST: APIRoute = async (context) => {
     return jsonResponse(responseBody, 200);
   } catch (error) {
     if (error instanceof LlmServiceError) {
-      let logPayload: CreateGenerationErrorLogCommand | null = null;
+      const logPayload: CreateGenerationErrorLogCommand = {
+        model: DEFAULT_LLM_MODEL,
+        source_text_hash: await sha256Hex(text),
+        source_text_length: text.length,
+        error_code: error.code,
+        error_message: error.message,
+      };
 
       try {
-        logPayload = {
-          model: DEFAULT_LLM_MODEL,
-          source_text_hash: await sha256Hex(text),
-          source_text_length: text.length,
-          error_code: error.code,
-          error_message: error.message,
-        };
-      } catch (hashError) {
-        console.warn('Failed to hash text for LLM error log', hashError);
-      }
-
-      try {
-        let logClient = supabase;
-
-        if (accessToken) {
-          if (refreshToken) {
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-
-            if (sessionError) {
-              logClient = createClient<Database>(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_KEY, {
-                auth: { persistSession: false },
-                global: { headers: { Authorization: `Bearer ${accessToken}` } },
-              });
-            }
-          } else {
-            logClient = createClient<Database>(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_KEY, {
-              auth: { persistSession: false },
-              global: { headers: { Authorization: `Bearer ${accessToken}` } },
-            });
-          }
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
         }
 
-        if (userId && logPayload && accessToken) {
-          await logClient.from('generation_error_logs').insert({
+        if (userId) {
+          await supabase.from('generation_error_logs').insert({
             ...logPayload,
             user_id: userId,
           });
