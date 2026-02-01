@@ -53,7 +53,16 @@ describe('POST /api/flashcards', () => {
   it('returns 401 when token missing', async () => {
     const context = createContext(
       { front: 'Front', back: 'Back', source: 'manual' },
-      { request: new Request('http://localhost/api/flashcards', { method: 'POST' }) },
+      {
+        request: new Request('http://localhost/api/flashcards', { method: 'POST' }),
+        locals: {
+          supabase: createSupabaseMock({
+            auth: {
+              getUser: async () => ({ data: { user: null }, error: { message: 'Unauthorized' } }),
+            },
+          }),
+        },
+      },
     );
     const response = await POST(context);
 

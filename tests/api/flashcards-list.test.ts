@@ -42,6 +42,13 @@ describe('GET /api/flashcards', () => {
   it('returns 401 when token missing', async () => {
     const context = createContext({
       request: new Request('http://localhost/api/flashcards'),
+      locals: {
+        supabase: createSupabaseMock({
+          auth: {
+            getUser: async () => ({ data: { user: null }, error: { message: 'Unauthorized' } }),
+          },
+        }),
+      },
     });
     const response = await GET(context);
 

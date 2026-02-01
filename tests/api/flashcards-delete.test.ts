@@ -37,6 +37,13 @@ describe('DELETE /api/flashcards/[id]', () => {
   it('returns 401 when token missing', async () => {
     const context = createContext({
       request: new Request('http://localhost/api/flashcards/1'),
+      locals: {
+        supabase: createSupabaseMock({
+          auth: {
+            getUser: async () => ({ data: { user: null }, error: { message: 'Unauthorized' } }),
+          },
+        }),
+      },
     });
     const response = await DELETE(context);
 

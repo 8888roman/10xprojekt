@@ -64,7 +64,16 @@ describe('POST /api/generations', () => {
         source_text_length: 1200,
         generation_duration: 0,
       },
-      { request: new Request('http://localhost/api/generations', { method: 'POST' }) },
+      {
+        request: new Request('http://localhost/api/generations', { method: 'POST' }),
+        locals: {
+          supabase: createSupabaseMock({
+            auth: {
+              getUser: async () => ({ data: { user: null }, error: { message: 'Unauthorized' } }),
+            },
+          }),
+        },
+      },
     );
     const response = await POST(context);
 
