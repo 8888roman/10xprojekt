@@ -75,6 +75,16 @@ Required variables:
 | `SUPABASE_KEY` | Your Supabase anonymous/public key |
 | `OPENROUTER_API_KEY` | OpenRouter API key for LLM access |
 
+Optional OpenRouter variables:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENROUTER_BASE_URL` | Override OpenRouter base URL |
+| `OPENROUTER_DEFAULT_MODEL` | Default model for chat completions |
+| `OPENROUTER_TIMEOUT_MS` | Request timeout in milliseconds |
+| `OPENROUTER_APP_NAME` | App name header for OpenRouter |
+| `OPENROUTER_APP_URL` | App URL header for OpenRouter |
+
 4. **Run the development server**
 
 ```bash
@@ -82,6 +92,36 @@ npm run dev
 ```
 
 Open [http://localhost:4321](http://localhost:4321) in your browser.
+
+### OpenRouter Chat Endpoint
+
+Send a chat completion request:
+
+```bash
+curl -X POST http://localhost:4321/api/openrouter/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "system": "You are a helpful assistant. Reply in Polish.",
+    "user": "Stworz 3 pytania do nauki o Astro 5.",
+    "params": { "temperature": 0.2, "max_tokens": 300 }
+  }'
+```
+
+Structured response (JSON schema):
+
+```bash
+curl -X POST http://localhost:4321/api/openrouter/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user": "Zwroc dane w JSON.",
+    "schema": {
+      "type": "object",
+      "properties": { "ok": { "type": "boolean" } },
+      "required": ["ok"],
+      "additionalProperties": false
+    }
+  }'
+```
 
 ## Available Scripts
 

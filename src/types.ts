@@ -148,3 +148,119 @@ export type GenerationErrorLogListQueryDto = {
   sort?: 'created_at';
   order?: SortOrder;
 };
+
+/**
+ * OpenRouter types.
+ */
+export type OpenRouterRole = 'system' | 'user' | 'assistant' | 'tool';
+
+export type Message = {
+  role: OpenRouterRole;
+  content: string;
+  name?: string;
+};
+
+export type ModelParams = {
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  seed?: number;
+  stop?: string | string[];
+};
+
+export type JsonSchema = {
+  type?: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
+  properties?: Record<string, JsonSchema>;
+  items?: JsonSchema;
+  required?: string[];
+  enum?: Array<string | number | boolean | null>;
+  anyOf?: JsonSchema[];
+  oneOf?: JsonSchema[];
+  allOf?: JsonSchema[];
+  additionalProperties?: boolean | JsonSchema;
+};
+
+export type ResponseFormatJsonSchema = {
+  type: 'json_schema';
+  json_schema: {
+    name: string;
+    strict: true;
+    schema: JsonSchema;
+  };
+};
+
+export type OpenRouterResponseFormat = ResponseFormatJsonSchema;
+
+export type ChatInput = {
+  system?: string;
+  user: string;
+  history?: Message[];
+  model?: string;
+  params?: ModelParams;
+  response_format?: OpenRouterResponseFormat;
+};
+
+export type StructuredChatInput = {
+  system?: string;
+  user: string;
+  history?: Message[];
+  model?: string;
+  params?: ModelParams;
+};
+
+export type OpenRouterPayload = {
+  model: string;
+  messages: Message[];
+  response_format?: OpenRouterResponseFormat;
+} & ModelParams;
+
+export type OpenRouterChoice = {
+  index: number;
+  message: {
+    role: OpenRouterRole;
+    content: string;
+  };
+  finish_reason?: string;
+};
+
+export type OpenRouterResponse = {
+  id: string;
+  created: number;
+  model: string;
+  choices: OpenRouterChoice[];
+  request_id?: string;
+};
+
+export type ChatResult = {
+  content: string;
+  model: string;
+  finishReason?: string;
+  requestId?: string;
+  raw: OpenRouterResponse;
+};
+
+export type StructuredResult<TData = unknown> = {
+  data: TData;
+  model: string;
+  finishReason?: string;
+  requestId?: string;
+  raw: OpenRouterResponse;
+};
+
+export type HealthStatus = {
+  ok: boolean;
+  status?: number;
+  requestId?: string;
+  model?: string;
+  message?: string;
+};
+
+export type OpenRouterError = {
+  code: string;
+  message: string;
+  status?: number;
+  details?: unknown[];
+  retryable?: boolean;
+};
