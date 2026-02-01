@@ -3,6 +3,7 @@ import { deleteFlashcard } from '../../../lib/services/flashcards';
 import {
   errorResponse,
   internalErrorResponse,
+  notFoundResponse,
   unauthorizedResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
@@ -20,12 +21,39 @@ const getAccessToken = (context: Parameters<APIRoute>[0]) => {
   return context.cookies.get('sb-access-token')?.value ?? null;
 };
 
+const getRefreshToken = (context: Parameters<APIRoute>[0]) =>
+  context.cookies.get('sb-refresh-token')?.value ?? null;
+
 export const DELETE: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
   const accessToken = getAccessToken(context);
+  const refreshToken = getRefreshToken(context);
 
   if (!accessToken) {
     return unauthorizedResponse('Missing access token.');
+  }
+
+  if (refreshToken) {
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (sessionError) {
+      return unauthorizedResponse('Invalid or expired token.');
+    }
+  } else {
+    const setAuth = (
+      supabase.auth as { setAuth?: (token: string) => Promise<void> | void }
+    ).setAuth;
+
+    if (setAuth) {
+      try {
+        await setAuth(accessToken);
+      } catch (error) {
+        return unauthorizedResponse('Invalid or expired token.');
+      }
+    }
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
@@ -47,24 +75,14 @@ export const DELETE: APIRoute = async (context) => {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return errorResponse({
-          status: 404,
-          error: 'Not Found',
-          message: 'Flashcard not found.',
-          code: 'NOT_FOUND',
-        });
+        return notFoundResponse('Flashcard not found.');
       }
 
       return internalErrorResponse('Failed to delete flashcard.');
     }
 
     if (!data) {
-      return errorResponse({
-        status: 404,
-        error: 'Not Found',
-        message: 'Flashcard not found.',
-        code: 'NOT_FOUND',
-      });
+      return notFoundResponse('Flashcard not found.');
     }
 
     return new Response(null, { status: 204 });

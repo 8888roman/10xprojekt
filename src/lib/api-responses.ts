@@ -68,3 +68,11 @@ export const internalErrorResponse = (message = 'Internal server error') =>
     message,
     code: 'INTERNAL_ERROR',
   });
+
+export const notFoundResponse = (message = 'Not Found') =>
+  errorResponse({
+    status: 404,
+    error: 'Not Found',
+    message,
+    code: 'NOT_FOUND',
+  });
