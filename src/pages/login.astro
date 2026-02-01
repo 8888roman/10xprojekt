@@ -1,6 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { LoginForm } from '../components/auth/LoginForm';
+
+const {
+  data: { user },
+} = await Astro.locals.supabase.auth.getUser();
+
+if (user) {
+  return Astro.redirect('/generate');
+}
 ---
 
 <Layout title="Logowanie">

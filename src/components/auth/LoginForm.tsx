@@ -17,26 +17,25 @@ export const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleEmailChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value);
-    if (errors.email) {
+    if (errors.email || errors.form) {
       setErrors((current) => ({ ...current, email: undefined, form: undefined }));
     }
-  }, [errors.email]);
+  }, [errors.email, errors.form]);
 
   const handlePasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value);
-    if (errors.password) {
+    if (errors.password || errors.form) {
       setErrors((current) => ({ ...current, password: undefined, form: undefined }));
     }
-  }, [errors.password]);
+  }, [errors.password, errors.form]);
 
   const handleSubmit = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      setSuccess(false);
 
       const nextErrors: FormErrors = {};
       const trimmedEmail = email.trim();
@@ -58,7 +57,26 @@ export const LoginForm = () => {
       }
 
       setErrors({});
-      setSuccess(true);
+      setIsSubmitting(true);
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password }),
+        });
+
+        if (!response.ok) {
+          setErrors({ form: 'Nieprawidlowy email lub haslo.' });
+          return;
+        }
+
+        window.location.href = '/generate';
+      } catch {
+        setErrors({ form: 'Wystapil blad serwera. Sprobuj ponownie.' });
+      } finally {
+        setIsSubmitting(false);
+      }
     },
     [email, password],
   );
@@ -80,11 +98,6 @@ export const LoginForm = () => {
     >
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         {errors.form && <AuthErrorBanner message={errors.form} />}
-        {success && (
-          <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Dane wygladaja poprawnie. Po podlaczeniu backendu nastapi logowanie.
-          </div>
-        )}
         <div className="space-y-1">
           <label className="text-sm font-medium" htmlFor={emailId}>
             Email
@@ -125,8 +138,8 @@ export const LoginForm = () => {
             </p>
           )}
         </div>
-        <Button type="submit" className="w-full">
-          Zaloguj sie
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Logowanie...' : 'Zaloguj sie'}
         </Button>
       </form>
     </AuthCard>

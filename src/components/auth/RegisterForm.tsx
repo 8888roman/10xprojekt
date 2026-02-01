@@ -20,33 +20,34 @@ export const RegisterForm = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
-  const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   const handleEmailChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value);
-    if (errors.email) {
+    if (errors.email || errors.form) {
       setErrors((current) => ({ ...current, email: undefined, form: undefined }));
     }
-  }, [errors.email]);
+  }, [errors.email, errors.form]);
 
   const handlePasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value);
-    if (errors.password) {
+    if (errors.password || errors.form) {
       setErrors((current) => ({ ...current, password: undefined, form: undefined }));
     }
-  }, [errors.password]);
+  }, [errors.password, errors.form]);
 
   const handleConfirmChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setConfirm(event.target.value);
-    if (errors.confirm) {
+    if (errors.confirm || errors.form) {
       setErrors((current) => ({ ...current, confirm: undefined, form: undefined }));
     }
-  }, [errors.confirm]);
+  }, [errors.confirm, errors.form]);
 
   const handleSubmit = useCallback(
-    (event: React.FormEvent<HTMLFormElement>) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      setSuccess(false);
+      setInfoMessage(null);
 
       const nextErrors: FormErrors = {};
       const trimmedEmail = email.trim();
@@ -76,7 +77,33 @@ export const RegisterForm = () => {
       }
 
       setErrors({});
-      setSuccess(true);
+      setIsSubmitting(true);
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, password }),
+        });
+
+        if (!response.ok) {
+          setErrors({ form: 'Nie udalo sie utworzyc konta.' });
+          return;
+        }
+
+        const payload = (await response.json()) as { status?: string };
+
+        if (payload.status === 'verification_required') {
+          setInfoMessage('Sprawdz skrzynke i potwierdz adres email, aby aktywowac konto.');
+          return;
+        }
+
+        window.location.href = '/generate';
+      } catch {
+        setErrors({ form: 'Wystapil blad serwera. Sprobuj ponownie.' });
+      } finally {
+        setIsSubmitting(false);
+      }
     },
     [confirm, email, password],
   );
@@ -93,9 +120,9 @@ export const RegisterForm = () => {
     >
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         {errors.form && <AuthErrorBanner message={errors.form} />}
-        {success && (
+        {infoMessage && (
           <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Dane wygladaja poprawnie. Po podlaczeniu backendu konto zostanie utworzone.
+            {infoMessage}
           </div>
         )}
         <div className="space-y-1">
@@ -158,8 +185,8 @@ export const RegisterForm = () => {
             </p>
           )}
         </div>
-        <Button type="submit" className="w-full">
-          Zarejestruj sie
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Tworzenie konta...' : 'Zarejestruj sie'}
         </Button>
       </form>
     </AuthCard>
