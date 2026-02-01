@@ -1,17 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { GET } from '../../src/pages/api/flashcards/index';
+import {
+  createAuthSupabaseMock,
+  createCookies,
+  createRequestWithAuth,
+} from '../utils/supabase-mocks';
 
 type ListContext = Parameters<typeof GET>[0];
-
-const createCookies = (values: Record<string, string>) => ({
-  get: (key: string) => (key in values ? { value: values[key] } : undefined),
-});
-
-const createRequestWithAuth = (url: string) =>
-  new Request(url, {
-    headers: { Authorization: 'Bearer token' },
-  });
 
 const createSupabaseMock = (overrides: Partial<ListContext['locals']['supabase']> = {}) => {
   const query = {
@@ -22,11 +18,7 @@ const createSupabaseMock = (overrides: Partial<ListContext['locals']['supabase']
   };
 
   return {
-    auth: {
-      getUser: async () => ({ data: { user: { id: 'user-id' } }, error: null }),
-      setSession: async () => ({ data: null, error: null }),
-      setAuth: async () => undefined,
-    },
+    ...createAuthSupabaseMock(),
     from: () => ({
       select: () => query,
     }),

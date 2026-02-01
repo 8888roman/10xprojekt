@@ -1,19 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { DELETE } from '../../src/pages/api/flashcards/[id]';
+import { createAuthSupabaseMock, createCookies } from '../utils/supabase-mocks';
 
 type DeleteContext = Parameters<typeof DELETE>[0];
 
-const createCookies = (values: Record<string, string>) => ({
-  get: (key: string) => (key in values ? { value: values[key] } : undefined),
-});
-
 const createSupabaseMock = (overrides: Partial<DeleteContext['locals']['supabase']> = {}) => ({
-  auth: {
-    getUser: async () => ({ data: { user: { id: 'user-id' } }, error: null }),
-    setSession: async () => ({ data: null, error: null }),
-    setAuth: async () => undefined,
-  },
+  ...createAuthSupabaseMock(),
   from: () => ({
     delete: () => ({
       eq: () => ({
