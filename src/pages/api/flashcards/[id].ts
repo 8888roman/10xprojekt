@@ -6,6 +6,7 @@ import {
   notFoundResponse,
   validationErrorResponse,
 } from '../../../lib/api-responses';
+import { ensureAuthenticated } from '../../../lib/auth';
 import { getFlashcardById, deleteFlashcard } from '../../../lib/services/flashcards';
 import { flashcardIdParamSchema } from '../../../lib/schemas/flashcards';
 
@@ -13,6 +14,11 @@ export const prerender = false;
 
 export const GET: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
+  const auth = await ensureAuthenticated(context, supabase);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
 
   const parsedParams = flashcardIdParamSchema.safeParse({ id: context.params.id });
 
@@ -45,6 +51,11 @@ export const GET: APIRoute = async (context) => {
 
 export const DELETE: APIRoute = async (context) => {
   const supabase = context.locals.supabase;
+  const auth = await ensureAuthenticated(context, supabase);
+
+  if (!auth.ok) {
+    return auth.response;
+  }
 
   const parsedParams = flashcardIdParamSchema.safeParse({ id: context.params.id });
 

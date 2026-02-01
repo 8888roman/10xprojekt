@@ -3,7 +3,7 @@ import type { SupabaseClient } from '../db/supabase.client';
 import { unauthorizedResponse } from './api-responses';
 
 type AuthResult =
-  | { ok: true; accessToken: string }
+  | { ok: true; accessToken: string; userId: string }
   | { ok: false; response: Response };
 
 const getAccessToken = (context: Parameters<APIRoute>[0]) => {
@@ -79,5 +79,5 @@ export const ensureAuthenticated = async (
     return { ok: false, response: unauthorizedResponse('Invalid or expired token.') };
   }
 
-  return { ok: true, accessToken };
+  return { ok: true, accessToken, userId: userData.user.id };
 };

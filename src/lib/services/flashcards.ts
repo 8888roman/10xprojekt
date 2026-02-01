@@ -1,5 +1,9 @@
 import type { SupabaseClient } from '../../db/supabase.client';
-import type { FlashcardDto, FlashcardListQueryDto } from '../../types';
+import type {
+  CreateFlashcardCommand,
+  FlashcardDto,
+  FlashcardListQueryDto,
+} from '../../types';
 
 type DeleteFlashcardResult = {
   id: number;
@@ -16,6 +20,15 @@ export const deleteFlashcard = async (supabase: SupabaseClient, id: number) =>
  */
 export const getFlashcardById = async (supabase: SupabaseClient, id: number) =>
   supabase.from('flashcards').select('*').eq('id', id).single<FlashcardDto>();
+
+/**
+ * Creates a flashcard for the current user (RLS enforced).
+ */
+export const createFlashcard = async (
+  supabase: SupabaseClient,
+  payload: CreateFlashcardCommand,
+  userId: string,
+) => supabase.from('flashcards').insert({ ...payload, user_id: userId }).select('*').single<FlashcardDto>();
 
 type ListFlashcardsParams = Required<Pick<FlashcardListQueryDto, 'page' | 'limit' | 'sort' | 'order'>> &
   Pick<FlashcardListQueryDto, 'source' | 'generation_id'>;

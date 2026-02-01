@@ -14,6 +14,20 @@ export const generateFlashcardsSchema = z.object({
 
 export type GenerateFlashcardsInput = z.infer<typeof generateFlashcardsSchema>;
 
+export const createFlashcardSchema = z.object({
+  front: z.string().min(1, { message: 'Front is required.' }).max(200),
+  back: z.string().min(1, { message: 'Back is required.' }).max(500),
+  source: z.enum(['ai-full', 'ai-edited', 'manual']),
+  generation_id: z
+    .coerce
+    .number()
+    .int()
+    .positive({ message: 'Generation id must be greater than zero.' })
+    .optional(),
+});
+
+export type CreateFlashcardInput = z.infer<typeof createFlashcardSchema>;
+
 export const flashcardIdParamSchema = z.object({
   id: z
     .coerce
