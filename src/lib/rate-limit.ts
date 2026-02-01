@@ -6,6 +6,19 @@ type RateLimitState = {
 const rateLimitStore = new Map<string, RateLimitState>();
 
 const now = () => Date.now();
+const SWEEP_THRESHOLD = 1_000;
+
+const sweepExpiredEntries = (current: number) => {
+  if (rateLimitStore.size < SWEEP_THRESHOLD) {
+    return;
+  }
+
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (current >= value.resetAt) {
+      rateLimitStore.delete(key);
+    }
+  }
+};
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -19,9 +32,13 @@ export const checkRateLimit = (
   windowMs: number,
 ): RateLimitResult => {
   const current = now();
+  sweepExpiredEntries(current);
   const existing = rateLimitStore.get(key);
 
   if (!existing || current >= existing.resetAt) {
+    if (existing) {
+      rateLimitStore.delete(key);
+    }
     const resetAt = current + windowMs;
     rateLimitStore.set(key, { count: 1, resetAt });
     return {
