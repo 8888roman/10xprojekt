@@ -13,3 +13,13 @@ export const generateFlashcardsSchema = z.object({
 });
 
 export type GenerateFlashcardsInput = z.infer<typeof generateFlashcardsSchema>;
+
+export const flashcardIdParamSchema = z.object({
+  id: z
+    .coerce
+    .number()
+    .int({ message: 'Flashcard id must be an integer.' })
+    .positive({ message: 'Flashcard id must be greater than zero.' }),
+});
+
+export type FlashcardIdParamInput = z.infer<typeof flashcardIdParamSchema>;
