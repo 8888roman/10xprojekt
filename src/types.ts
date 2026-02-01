@@ -49,6 +49,9 @@ export type GenerateFlashcardsResponseDto = {
   proposals: FlashcardProposalDto[];
 };
 
+/**
+ * Standard error payload for API responses.
+ */
 export type ErrorResponseDto = {
   error: string;
   message: string;
@@ -112,6 +115,11 @@ export type CreateGenerationErrorLogCommand = Omit<
 export type GenerateFlashcardsCommand = {
   text: string;
 };
+
+/**
+ * Path parameter DTOs.
+ */
+export type FlashcardIdParamDto = Pick<FlashcardRow, 'id'>;
 
 /**
  * Query parameter DTOs for list endpoints.
